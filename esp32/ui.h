@@ -108,7 +108,7 @@ namespace UI {
 		}
 
 		if (next_screen != -1)
-			lv_screen_load_anim(screens[next_screen], anim, 100, 10, false);
+			lv_screen_load_anim(screens[next_screen], anim, 100, 100, false);
 	}
 
 	void main_screen_init(void) {
@@ -131,7 +131,7 @@ namespace UI {
 
 		lblDistanceToNextRoad = lv_label_create(screen_main);
 		lv_label_set_text(lblDistanceToNextRoad, "CatDrive");
-		lv_obj_set_style_text_color(lblDistanceToNextRoad, lv_color_make(0x00, 0x00, 0xff), LV_PART_MAIN);
+		lv_obj_set_style_text_color(lblDistanceToNextRoad, lv_color_make(0x55, 0x55, 0x55), LV_PART_MAIN);
 
 		lblNextRoad = lv_label_create(screen_main);
 		lv_label_set_text(lblNextRoad, "welcome!");
@@ -523,7 +523,7 @@ namespace Data {
 			Serial.println("Error: Icon buffer overflow");
 		} else {
 			Serial.println("Drawing icon");
-			convert1BitBitmapToRgb565(details::iconRenderBuffer, value, 64, 64, lv_color_to_u16(lv_color_make(0x00, 0x00, 0xFF)),
+			convert1BitBitmapToRgb565(details::iconRenderBuffer, value, 64, 64, lv_color_to_u16(lv_color_make(0x55, 0x55, 0x55)),
 			                          lv_color_to_u16(lv_color_make(0xFF, 0xFF, 0xFF)));
 			details::iconDirty = true;
 		}
