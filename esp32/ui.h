@@ -151,7 +151,7 @@ namespace UI {
 		// Image top middle
 		lv_obj_set_style_width(imgTbtIcon, ICON_WIDTH, LV_PART_MAIN);
 		lv_obj_set_style_height(imgTbtIcon, ICON_HEIGHT, LV_PART_MAIN);
-		lv_img_set_zoom(imgTbtIcon, 256*4);
+		lv_img_set_zoom(imgTbtIcon, 256*3);
 		lv_obj_align(imgTbtIcon, LV_ALIGN_CENTER, 10, 10);
 
 		lv_label_set_long_mode(lblSpeed, LV_LABEL_LONG_SCROLL_CIRCULAR);
