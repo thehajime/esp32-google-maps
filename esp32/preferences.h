@@ -3,7 +3,7 @@
 
 namespace Pref {
 	bool lightTheme = false;
-	int brightness = 40;
+	int brightness = 60;
 	int speedLimit = 60;
 } // namespace Pref
 

@@ -4,7 +4,9 @@
 #include "lcd.h"
 #include "scheduler.h"
 
-extern SimpleSt7789 lcd;
+class SimpleSh8601;
+
+extern SimpleSh8601 lcd;
 
 namespace ThemeControl {
 	namespace detail {
