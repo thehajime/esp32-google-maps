@@ -92,10 +92,9 @@ static bool _notify_lvgl_flush_ready(esp_lcd_panel_io_handle_t panel_io, esp_lcd
   return high_task_awoken == pdTRUE;
 }
 
+i2c_master_bus_handle_t user_i2c_port0_handle;
 static void i2c_indev_init(void)
 {
-	i2c_master_bus_handle_t user_i2c_port0_handle;
-
 	i2c_master_bus_config_t i2c_bus_config = {};
 	i2c_bus_config.clk_source = I2C_CLK_SRC_DEFAULT;
 	i2c_bus_config.i2c_port = I2C_NUM_0;
@@ -314,11 +313,12 @@ void SimpleSh8601::setOffset(uint16_t xOffset, uint16_t yOffset) {
 }
 
 void SimpleSh8601::setBrightness(uint8_t percent) {
+	uint8_t bl_val = (uint8_t)((percent * 255) / 100);
 	uint32_t lcd_cmd = 0x51;
 	lcd_cmd &= 0xff;
 	lcd_cmd <<= 8;
 	lcd_cmd |= 0x02 << 24;
-	esp_lcd_panel_io_tx_param(amoled_panel_io_handle, lcd_cmd, &percent, 1);
+	esp_lcd_panel_io_tx_param(amoled_panel_io_handle, lcd_cmd, &bl_val, 1);
 	return;
 }
 

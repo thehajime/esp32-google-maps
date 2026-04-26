@@ -156,7 +156,7 @@ namespace UI {
 
 		lv_label_set_long_mode(lblSpeed, LV_LABEL_LONG_SCROLL_CIRCULAR);
 		lv_obj_set_style_width(lblSpeed, SCREEN_WIDTH/2, LV_PART_MAIN);
-		lv_obj_set_style_text_font(lblSpeed, get_montserrat_number_bold_48(), LV_STATE_DEFAULT);
+		lv_obj_set_style_text_font(lblSpeed, &montserrat_bold_64, LV_STATE_DEFAULT);
 		lv_obj_set_style_text_align(lblSpeed, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
 		lv_obj_align(lblSpeed, LV_ALIGN_LEFT_MID, -30, 0);
 
@@ -165,29 +165,33 @@ namespace UI {
 		lv_obj_set_style_text_align(lblSpeedUnit, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
 		lv_obj_align_to(lblSpeedUnit, lblSpeed, LV_ALIGN_TOP_LEFT, 0, -28);
 
-		lv_label_set_long_mode(lblEta, LV_LABEL_LONG_SCROLL_CIRCULAR);
-		lv_obj_set_style_width(lblEta, SCREEN_WIDTH/1.5, LV_PART_MAIN);
-		lv_obj_set_style_text_font(lblEta, &montserrat_bold_32, LV_STATE_DEFAULT);
-		lv_obj_set_style_text_align(lblEta, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-		lv_obj_align(lblEta, LV_ALIGN_TOP_MID, 0, 70);
-
 		lv_label_set_long_mode(lblDistanceToNextRoad, LV_LABEL_LONG_SCROLL_CIRCULAR);
 		lv_obj_set_style_width(lblDistanceToNextRoad, SCREEN_WIDTH/2, LV_PART_MAIN);
-		lv_obj_set_style_text_font(lblDistanceToNextRoad, get_montserrat_number_bold_48(), LV_STATE_DEFAULT);
+		lv_obj_set_style_text_font(lblDistanceToNextRoad, &montserrat_bold_64, LV_STATE_DEFAULT);
 		lv_obj_set_style_text_align(lblDistanceToNextRoad, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-		lv_obj_align_to(lblDistanceToNextRoad, lblEta, LV_ALIGN_OUT_BOTTOM_LEFT, 40, -80);
+		lv_obj_align(lblDistanceToNextRoad, LV_ALIGN_TOP_MID, 0, 30);
+
+		if (Pref::isNextRoad) {
+			lv_label_set_long_mode(lblNextRoad, LV_LABEL_LONG_SCROLL_CIRCULAR);
+			lv_obj_set_style_width(lblNextRoad, SCREEN_WIDTH/2, LV_PART_MAIN);
+			lv_obj_set_style_text_font(lblNextRoad, &mochiy_pop_one_32, LV_STATE_DEFAULT);
+			lv_obj_set_style_text_align(lblNextRoad, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
+			lv_obj_align_to(lblNextRoad, lblNextRoadDesc, LV_ALIGN_TOP_LEFT, 0, 20);
+		}
 
 		lv_label_set_long_mode(lblNextRoadDesc, LV_LABEL_LONG_SCROLL_CIRCULAR);
 		lv_obj_set_style_width(lblNextRoadDesc, SCREEN_WIDTH/2, LV_PART_MAIN);
-		lv_obj_set_style_text_font(lblNextRoadDesc, &montserrat_bold_32, LV_STATE_DEFAULT);
+		lv_obj_set_style_text_font(lblNextRoadDesc, &mochiy_pop_one_32, LV_STATE_DEFAULT);
 		lv_obj_set_style_text_align(lblNextRoadDesc, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-		lv_obj_align(lblNextRoadDesc, LV_ALIGN_BOTTOM_MID, 0, -30);
+		lv_obj_align(lblNextRoadDesc, LV_ALIGN_BOTTOM_MID, 0, -80);
 
-		lv_label_set_long_mode(lblNextRoad, LV_LABEL_LONG_SCROLL_CIRCULAR);
-		lv_obj_set_style_width(lblNextRoad, SCREEN_WIDTH/2, LV_PART_MAIN);
-		lv_obj_set_style_text_font(lblNextRoad, &montserrat_bold_32, LV_STATE_DEFAULT);
-		lv_obj_set_style_text_align(lblNextRoad, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-		lv_obj_align_to(lblNextRoad, lblNextRoadDesc, LV_ALIGN_TOP_LEFT, 0, -40);
+		lv_label_set_long_mode(lblEta, LV_LABEL_LONG_SCROLL_CIRCULAR);
+		lv_obj_set_style_width(lblEta, SCREEN_WIDTH/1.5, LV_PART_MAIN);
+		lv_obj_set_style_text_font(lblEta, &mochiy_pop_one_32, LV_STATE_DEFAULT);
+		lv_obj_set_style_text_align(lblEta, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
+		lv_obj_align_to(lblEta, lblNextRoadDesc, LV_ALIGN_TOP_LEFT, 0, 30);
+
+
 
 #else
 		lv_obj_set_style_width(imgTbtIcon, ICON_WIDTH, LV_PART_MAIN);
@@ -421,6 +425,10 @@ namespace Data {
 			return;
 
 		details::nextRoadDesc = value;
+		if (value.isEmpty()) {
+			lv_label_set_text(UI::details::lblNextRoadDesc, "none");
+			return;
+		}
 
 		lv_label_set_text(UI::details::lblNextRoadDesc, value.c_str());
 	}
