@@ -178,9 +178,9 @@ void loop() {
 			Data::clearNavigationData();
 			Data::clearSpeedData();
 			Data::setNextRoadDesc("Disconnected!");
-			UI::switch_splash_screen();
+                        //			UI::switch_splash_screen();
 		}
-		else
-			UI::switch_main_screen();
+                //		else
+                //			UI::switch_main_screen();
 	}
 }

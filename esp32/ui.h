@@ -12,6 +12,8 @@
 #include "ble.h"
 #include <lvgl.h>
 #include "user_config.h"
+#define ARDUINOTRACE_ENABLE 1
+#include <ArduinoTrace.h>
 
 #define FS                      SPIFFS
 #define FORMAT_SPIFFS_IF_FAILED true
@@ -74,6 +76,7 @@ namespace UI {
 	lv_obj_t *screens[MAX_SCREENS];
 	lv_obj_t *screen_main;
 	lv_obj_t *screen_splash;
+	lv_obj_t *screen_current;
 	lv_obj_t *battLabel;
 
 	void cb_screen_event_gesture(lv_event_t * e)
@@ -108,8 +111,10 @@ namespace UI {
 			break;
 		}
 
-		if (next_screen != -1)
+		if (next_screen != -1) {
 			lv_screen_load_anim(screens[next_screen], anim, 100, 100, false);
+			screen_current = screens[next_screen];
+		}
 	}
 
 	void main_screen_init(void) {
@@ -152,7 +157,7 @@ namespace UI {
 		// Image top middle
 		lv_obj_set_style_width(imgTbtIcon, ICON_WIDTH, LV_PART_MAIN);
 		lv_obj_set_style_height(imgTbtIcon, ICON_HEIGHT, LV_PART_MAIN);
-		lv_img_set_zoom(imgTbtIcon, 256*3);
+		lv_img_set_zoom(imgTbtIcon, 256*2);
 		lv_obj_align(imgTbtIcon, LV_ALIGN_CENTER, 10, 10);
 
 		lv_label_set_long_mode(lblSpeed, LV_LABEL_LONG_SCROLL_CIRCULAR);
@@ -265,14 +270,17 @@ namespace UI {
 		lcd.init();
 		main_screen_init();
 		splash_screen_init();
+		lv_scr_load(screen_main);
 	}
 
 	void switch_splash_screen() {
 		lv_scr_load(screen_splash);
+		screen_current = screen_splash;
 	}
 
 	void switch_main_screen() {
 		lv_scr_load(screen_main);
+		screen_current = screen_main;
 	}
 
 	void update() {
@@ -389,11 +397,12 @@ namespace Data {
 	}
 
 	void setSpeed(const int& value) {
+		TRACE();
+		DUMP(value);
 		if (value == details::speed)
 			return;
 
 		details::speed = value;
-
 		if (value == -1) {
 			lv_label_set_text(UI::details::lblSpeed, "");
 		} else {
@@ -406,6 +415,8 @@ namespace Data {
 	}
 
 	void setNextRoad(const String& value) {
+		TRACE();
+		DUMP(value);
 		if (value == details::nextRoad)
 			return;
 
@@ -422,12 +433,18 @@ namespace Data {
 	}
 
 	void setNextRoadDesc(const String& value) {
+		TRACE();
+		DUMP(value);
 		if (value == details::nextRoadDesc)
 			return;
 
 		details::nextRoadDesc = value;
 		if (value.isEmpty()) {
-			lv_label_set_text(UI::details::lblNextRoadDesc, "none");
+			if (!Data::details::nextRoad.isEmpty())
+				lv_label_set_text(UI::details::lblNextRoadDesc,
+						  Data::details::nextRoad.c_str());
+			else
+				lv_label_set_text(UI::details::lblNextRoadDesc, "none");
 			return;
 		}
 
@@ -439,6 +456,8 @@ namespace Data {
 	}
 
 	void setEta(const String& value) {
+		TRACE();
+		DUMP(value);
 		if (value == details::eta)
 			return;
 
@@ -476,6 +495,8 @@ namespace Data {
 	}
 
 	void setDistanceToNextTurn(const String& value) {
+		TRACE();
+		DUMP(value);
 		if (value == details::distanceToNextTurn)
 			return;
 		details::distanceToNextTurn = value;

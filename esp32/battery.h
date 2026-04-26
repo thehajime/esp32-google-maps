@@ -56,6 +56,9 @@ void initBatery() {
 
 void readBattery() {
 	uint32_t Vbatt = 0;
+	if (UI::screen_current != UI::screen_splash)
+		return;
+
 	for(int i = 0; i < 16; i++) {
 		Vbatt += analogReadMilliVolts(A0); // Read and accumulate ADC voltage
 	}
