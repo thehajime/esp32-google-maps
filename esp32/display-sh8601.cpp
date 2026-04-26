@@ -50,46 +50,52 @@ static const sh8601_lcd_init_cmd_t sh8601_lcd_init_cmds[] =
 
 static void _increase_lvgl_tick(void *arg)
 {
-  lv_tick_inc(LVGL_TICK_PERIOD_MS);
+	lv_tick_inc(LVGL_TICK_PERIOD_MS);
 }
 
 static void _lvgl_flush_cb(lv_display_t * disp, const lv_area_t * area, uint8_t * color_p) {
-  esp_lcd_panel_handle_t panel_handle = (esp_lcd_panel_handle_t)lv_display_get_user_data(disp);
-  lv_draw_sw_rgb565_swap(color_p, lv_area_get_width(area) * lv_area_get_height(area));
+	esp_lcd_panel_handle_t panel_handle = (esp_lcd_panel_handle_t)lv_display_get_user_data(disp);
+	esp_lcd_panel_draw_bitmap(panel_handle, area->x1, area->y1, area->x2+1, area->y2+1, lvgl_dest);
+	lv_display_flush_ready(disp);
+	return;
+	//TRACE();
+	panel_handle = (esp_lcd_panel_handle_t)lv_display_get_user_data(disp);
+	lv_draw_sw_rgb565_swap(color_p, lv_area_get_width(area) * lv_area_get_height(area));
 
-  lv_display_rotation_t rotation = lv_display_get_rotation(disp);
-  lv_area_t rotated_area;
-  if(rotation != LV_DISPLAY_ROTATION_0)
-  {
-    lv_color_format_t cf = lv_display_get_color_format(disp);
-    /*Calculate the position of the rotated area*/
-    rotated_area = *area;
-    lv_display_rotate_area(disp, &rotated_area);
-    /*Calculate the source stride (bytes in a line) from the width of the area*/
-    uint32_t src_stride = lv_draw_buf_width_to_stride(lv_area_get_width(area), cf);
-    /*Calculate the stride of the destination (rotated) area too*/
-    uint32_t dest_stride = lv_draw_buf_width_to_stride(lv_area_get_width(&rotated_area), cf);
-    /*Have a buffer to store the rotated area and perform the rotation*/
+	lv_display_rotation_t rotation = lv_display_get_rotation(disp);
+	lv_area_t rotated_area;
+	DUMP(rotation);
+	if(rotation != LV_DISPLAY_ROTATION_0)
+	{
+		lv_color_format_t cf = lv_display_get_color_format(disp);
+		/*Calculate the position of the rotated area*/
+		rotated_area = *area;
+		lv_display_rotate_area(disp, &rotated_area);
+		/*Calculate the source stride (bytes in a line) from the width of the area*/
+		uint32_t src_stride = lv_draw_buf_width_to_stride(lv_area_get_width(area), cf);
+		/*Calculate the stride of the destination (rotated) area too*/
+		uint32_t dest_stride = lv_draw_buf_width_to_stride(lv_area_get_width(&rotated_area), cf);
+		/*Have a buffer to store the rotated area and perform the rotation*/
 
-    int32_t src_w = lv_area_get_width(area);
-    int32_t src_h = lv_area_get_height(area);
-    lv_draw_sw_rotate(color_p, lvgl_dest, src_w, src_h, src_stride, dest_stride, rotation, cf);
-    /*Use the rotated area and rotated buffer from now on*/
-    area = &rotated_area;
-  }
-  esp_lcd_panel_draw_bitmap(panel_handle, area->x1, area->y1, area->x2+1, area->y2+1, lvgl_dest);
+		int32_t src_w = lv_area_get_width(area);
+		int32_t src_h = lv_area_get_height(area);
+		lv_draw_sw_rotate(color_p, lvgl_dest, src_w, src_h, src_stride, dest_stride, rotation, cf);
+		/*Use the rotated area and rotated buffer from now on*/
+		area = &rotated_area;
+	}
+	esp_lcd_panel_draw_bitmap(panel_handle, area->x1, area->y1, area->x2+1, area->y2+1, lvgl_dest);
 }
 
 static void _lvgl_flush_wait_cb(lv_display_t * disp) //等待发送数据完成,使用lvgl_flush_wait_cb 不需要再使用lv_disp_flush_ready(disp);
 {
-  xSemaphoreTake(flush_done_semaphore, portMAX_DELAY);
+	xSemaphoreTake(flush_done_semaphore, portMAX_DELAY);
 }
 
 static bool _notify_lvgl_flush_ready(esp_lcd_panel_io_handle_t panel_io, esp_lcd_panel_io_event_data_t *edata, void *user_ctx)
 {
-  BaseType_t high_task_awoken = pdFALSE;
-  xSemaphoreGiveFromISR(flush_done_semaphore, &high_task_awoken);
-  return high_task_awoken == pdTRUE;
+	BaseType_t high_task_awoken = pdFALSE;
+	xSemaphoreGiveFromISR(flush_done_semaphore, &high_task_awoken);
+	return high_task_awoken == pdTRUE;
 }
 
 i2c_master_bus_handle_t user_i2c_port0_handle;
@@ -113,56 +119,56 @@ static void i2c_indev_init(void)
 
 static void _lvgl_rounder_cb(lv_event_t *e)
 {
-  lv_area_t *area = (lv_area_t *)lv_event_get_param(e); 
+	lv_area_t *area = (lv_area_t *)lv_event_get_param(e); 
 
-  uint16_t x1 = area->x1;
-  uint16_t x2 = area->x2;
-  uint16_t y1 = area->y1;
-  uint16_t y2 = area->y2;
+	uint16_t x1 = area->x1;
+	uint16_t x2 = area->x2;
+	uint16_t y1 = area->y1;
+	uint16_t y2 = area->y2;
 
-  area->x1 = (x1 >> 1) << 1;
-  area->y1 = (y1 >> 1) << 1;
+	area->x1 = (x1 >> 1) << 1;
+	area->y1 = (y1 >> 1) << 1;
 
-  area->x2 = ((x2 >> 1) << 1) + 1;
-  area->y2 = ((y2 >> 1) << 1) + 1;
+	area->x2 = ((x2 >> 1) << 1) + 1;
+	area->y2 = ((y2 >> 1) << 1) + 1;
 }
 
 static bool _lvgl_lock(int timeout_ms)
 {
-  assert(lvgl_mux && "bsp_display_start must be called first");
+	assert(lvgl_mux && "bsp_display_start must be called first");
 
-  const TickType_t timeout_ticks = (timeout_ms == -1) ? portMAX_DELAY : pdMS_TO_TICKS(timeout_ms);
-  return xSemaphoreTake(lvgl_mux, timeout_ticks) == pdTRUE;
+	const TickType_t timeout_ticks = (timeout_ms == -1) ? portMAX_DELAY : pdMS_TO_TICKS(timeout_ms);
+	return xSemaphoreTake(lvgl_mux, timeout_ticks) == pdTRUE;
 }
 
 static void _lvgl_unlock(void)
 {
-  assert(lvgl_mux && "bsp_display_start must be called first");
-  xSemaphoreGive(lvgl_mux);
+	assert(lvgl_mux && "bsp_display_start must be called first");
+	xSemaphoreGive(lvgl_mux);
 }
 
 static void _lvgl_port_task(void *arg)
 {
-  uint32_t task_delay_ms = LVGL_TASK_MAX_DELAY_MS;
-  for(;;)
-  {
-    // Lock the mutex due to the LVGL APIs are not thread-safe
-    if (_lvgl_lock(-1))
-    {
-      task_delay_ms = lv_timer_handler();
-      // Release the mutex
-      _lvgl_unlock();
-    }
-    if (task_delay_ms > LVGL_TASK_MAX_DELAY_MS)
-    {
-      task_delay_ms = LVGL_TASK_MAX_DELAY_MS;
-    }
-    else if (task_delay_ms < LVGL_TASK_MIN_DELAY_MS)
-    {
-      task_delay_ms = LVGL_TASK_MIN_DELAY_MS;
-    }
-    vTaskDelay(pdMS_TO_TICKS(task_delay_ms));
-  }
+	uint32_t task_delay_ms = LVGL_TASK_MAX_DELAY_MS;
+	for(;;)
+	{
+		// Lock the mutex due to the LVGL APIs are not thread-safe
+		if (_lvgl_lock(-1))
+		{
+			task_delay_ms = lv_timer_handler();
+			// Release the mutex
+			_lvgl_unlock();
+		}
+		if (task_delay_ms > LVGL_TASK_MAX_DELAY_MS)
+		{
+			task_delay_ms = LVGL_TASK_MAX_DELAY_MS;
+		}
+		else if (task_delay_ms < LVGL_TASK_MIN_DELAY_MS)
+		{
+			task_delay_ms = LVGL_TASK_MIN_DELAY_MS;
+		}
+		vTaskDelay(pdMS_TO_TICKS(task_delay_ms));
+	}
 }
 
 static void TouchInputReadCallback(lv_indev_t * indev, lv_indev_data_t *indevData)
@@ -256,7 +262,7 @@ void SimpleSh8601::init() {
 	buf_2 = (uint8_t *)heap_caps_malloc(BUFF_SIZE, MALLOC_CAP_DMA);
 	lv_display_set_buffers(disp, buf_1, buf_2, BUFF_SIZE, LV_DISPLAY_RENDER_MODE_PARTIAL);
 	lv_display_set_user_data(disp, panel_handle);
-	lv_display_add_event_cb(disp, _lvgl_rounder_cb,LV_EVENT_INVALIDATE_AREA,NULL);
+	lv_display_add_event_cb(disp, _lvgl_rounder_cb, LV_EVENT_INVALIDATE_AREA, NULL);
 	lvgl_dest = (uint8_t *)heap_caps_malloc(BUFF_SIZE, MALLOC_CAP_DMA); //旋转buf
 
 	/*port indev*/
