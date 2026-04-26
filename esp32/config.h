@@ -13,4 +13,7 @@
 
 #define HORIZONTAL
 
+#define ARDUINOTRACE_ENABLE 1
+#include <ArduinoTrace.h>
+
 #endif

@@ -1,5 +1,6 @@
 #include "lcd.h"
 #include "registers.h"
+#include "config.h"
 #include "driver/i2c_master.h"
 #include "driver/spi_master.h"
 #include "esp_lcd_panel_ops.h"
