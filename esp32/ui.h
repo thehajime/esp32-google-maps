@@ -74,6 +74,7 @@ namespace UI {
 	lv_obj_t *screens[MAX_SCREENS];
 	lv_obj_t *screen_main;
 	lv_obj_t *screen_splash;
+	lv_obj_t *battLabel;
 
 	void cb_screen_event_gesture(lv_event_t * e)
 	{
@@ -237,12 +238,6 @@ namespace UI {
 		lv_obj_add_event_cb(screen_main, cb_screen_event_gesture, LV_EVENT_GESTURE, NULL);
 	}
 
-	void screen_splash_loaded_cb(lv_event_t *e)
-	{
-		/* load main screen after 3000ms */
-		lv_screen_load_anim(screen_main, LV_SCR_LOAD_ANIM_FADE_ON, 500, 3000, false);
-	}
-
 	void splash_screen_init(void) {
 		screen_splash = lv_obj_create(NULL);
 		screens[0] = screen_splash;
@@ -253,7 +248,13 @@ namespace UI {
 		lv_obj_set_style_bg_color(imgBg, lv_color_make(0xFF, 0xFF, 0xFF), LV_PART_MAIN);
 		lv_img_set_src(imgBg, &mod_circle);
 
-//		lv_obj_add_event_cb(screen_splash, screen_splash_loaded_cb, LV_EVENT_SCREEN_LOADED, NULL);
+		battLabel = lv_label_create(screen_splash);
+		lv_label_set_text(battLabel, "Batt");
+		lv_obj_set_style_text_color(battLabel, lv_color_make(0x22, 0x22, 0x22), LV_PART_MAIN);
+		lv_obj_set_style_text_font(battLabel, &mochiy_pop_one_32, LV_STATE_DEFAULT);
+		lv_obj_set_style_text_align(battLabel, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
+		lv_obj_align(battLabel, LV_ALIGN_BOTTOM_MID, 0, -50);
+
 		lv_obj_add_event_cb(screen_splash, cb_screen_event_gesture, LV_EVENT_GESTURE, NULL);
 	}
 
@@ -484,6 +485,10 @@ namespace Data {
 
 	String fullEta() {
 		return ete() + " - " + totalDistance() + " - " + eta();
+	}
+
+	void setBatteryCap(float volt, int percentage) {
+		lv_label_set_text_fmt(UI::battLabel, "%.3fV/%d%%", volt, percentage);
 	}
 
 	String displayIconHash() {

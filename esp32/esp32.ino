@@ -166,6 +166,7 @@ void loop() {
 		if (isOverspeed(Data::speed())) {
 			ThemeControl::flashScreen();
 		}
+		readBattery();
 	}
 
 	// Connection status
@@ -183,21 +184,3 @@ void loop() {
 			UI::switch_main_screen();
 	}
 }
-#if 0
-#include <Arduino.h>
-
-void setup() {
-  Serial.begin(115200);
-  pinMode(A0, INPUT);         // Configure A0 as ADC input
-}
-
-void loop() {
-  uint32_t Vbatt = 0;
-  for(int i = 0; i < 16; i++) {
-    Vbatt += analogReadMilliVolts(A0); // Read and accumulate ADC voltage
-  }
-  float Vbattf = 2 * Vbatt / 16 / 1000.0;     // Adjust for 1:2 divider and convert to volts
-  Serial.println(Vbattf, 3);                  // Output voltage to 3 decimal places
-  delay(1000);                                // Wait for 1 second
-}
-#endif
