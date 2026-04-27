@@ -6,6 +6,8 @@
 #include "esp_lcd_panel_ops.h"
 #include "esp_lcd_panel_io.h"
 #include "esp_lcd_io_spi.h"
+#include "esp_lcd_panel_vendor.h"
+#include "esp_lcd_panel_commands.h"
 #include "src/sh8601/esp_lcd_sh8601.h"
 #include "user_config.h"
 #include <lvgl.h>
@@ -22,6 +24,10 @@ SimpleSh8601::SimpleSh8601(SPIClass* spi,
 			   Rotation rotation) : SimpleDisplay(spi, spiSettings, width, height, cs, dc, rst,
 							      backlight, rotation) {
 }
+
+#define LCD_OPCODE_WRITE_CMD        (0x02ULL)
+#define LCD_OPCODE_READ_CMD         (0x03ULL)
+#define LCD_OPCODE_WRITE_COLOR      (0x32ULL)
 
 static SemaphoreHandle_t lvgl_mux = NULL;
 #define LCD_HOST    SPI2_HOST
@@ -333,9 +339,15 @@ void SimpleSh8601::setBrightness(uint8_t percent) {
 void SimpleSh8601::flushWindow(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t* color) {
 }
 
-/* XXX: not tested */
 void SimpleSh8601::invertDisplay(bool invert) {
-	sendCommand(invert ? REG_INVON : REG_INVOFF);
+	uint32_t lcd_cmd = invert ? LCD_CMD_INVON : LCD_CMD_INVOFF;
+
+	lcd_cmd &= 0xff;
+	lcd_cmd <<= 8;
+	lcd_cmd |= LCD_OPCODE_WRITE_CMD << 24;
+
+	esp_lcd_panel_io_tx_param(amoled_panel_io_handle, lcd_cmd, NULL, 0);
+	return;
 }
 
 
