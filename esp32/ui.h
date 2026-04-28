@@ -33,7 +33,7 @@ SimpleSh8601 lcd(&SPI,
                  PIN_LCD_DC,
                  PIN_LCD_RST,
                  PIN_BACKLIGHT,
-                 SimpleSh8601::ROTATION_180
+                 SimpleSh8601::ROTATION_0
 );
 
 
