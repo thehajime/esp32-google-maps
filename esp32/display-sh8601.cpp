@@ -82,11 +82,10 @@ static void _lvgl_flush_cb(lv_display_t * disp, const lv_area_t * area, uint8_t 
 		lv_draw_sw_rotate(color_p, lvgl_dest, src_w, src_h, src_stride, dest_stride, rotation, cf);
 		/*Use the rotated area and rotated buffer from now on*/
 		area = &rotated_area;
-
-		esp_lcd_panel_draw_bitmap(panel_handle, area->x1, area->y1, area->x2+1, area->y2+1, lvgl_dest);
 	} else {
-		esp_lcd_panel_draw_bitmap(panel_handle, area->x1, area->y1, area->x2+1, area->y2+1, color_p);
+		lvgl_dest = color_p;
 	}
+	esp_lcd_panel_draw_bitmap(panel_handle, area->x1, area->y1, area->x2+1, area->y2+1, lvgl_dest);
 }
 
 static void _lvgl_flush_wait_cb(lv_display_t * disp) //等待发送数据完成,使用lvgl_flush_wait_cb 不需要再使用lv_disp_flush_ready(disp);
