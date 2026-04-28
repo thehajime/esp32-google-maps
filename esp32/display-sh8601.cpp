@@ -345,19 +345,3 @@ void SimpleSh8601::invertDisplay(bool invert) {
 	esp_lcd_panel_io_tx_param(amoled_panel_io_handle, lcd_cmd, NULL, 0);
 	return;
 }
-
-
-/* XXX: not tested */
-void SimpleSh8601::sendCommand(uint8_t command, const uint8_t* data, size_t size) {
-	_spi->beginTransaction(_spiSettings);
-	digitalWrite(_pinCs, LOW);
-	digitalWrite(_pinDc, LOW);
-	_spi->transfer(command);
-	if (data && size) {
-		digitalWrite(_pinDc, HIGH);
-		_spi->transferBytes(data, nullptr, size);
-	}
-	digitalWrite(_pinCs, HIGH);
-	_spi->endTransaction();
-}
-
