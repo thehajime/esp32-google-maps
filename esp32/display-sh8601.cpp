@@ -62,16 +62,10 @@ static void _increase_lvgl_tick(void *arg)
 
 static void _lvgl_flush_cb(lv_display_t * disp, const lv_area_t * area, uint8_t * color_p) {
 	esp_lcd_panel_handle_t panel_handle = (esp_lcd_panel_handle_t)lv_display_get_user_data(disp);
-	esp_lcd_panel_draw_bitmap(panel_handle, area->x1, area->y1, area->x2+1, area->y2+1, lvgl_dest);
-	lv_display_flush_ready(disp);
-	return;
-	//TRACE();
-	panel_handle = (esp_lcd_panel_handle_t)lv_display_get_user_data(disp);
 	lv_draw_sw_rgb565_swap(color_p, lv_area_get_width(area) * lv_area_get_height(area));
 
 	lv_display_rotation_t rotation = lv_display_get_rotation(disp);
 	lv_area_t rotated_area;
-	DUMP(rotation);
 	if(rotation != LV_DISPLAY_ROTATION_0)
 	{
 		lv_color_format_t cf = lv_display_get_color_format(disp);
