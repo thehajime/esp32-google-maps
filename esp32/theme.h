@@ -22,7 +22,7 @@ namespace ThemeControl {
 				return;
 
 			isLightHardware = value;
-			value ? lcd.invertDisplay(true) : lcd.invertDisplay(false);
+			value ? lcd.invertDisplay(false) : lcd.invertDisplay(true);
 		}
 
 		bool isHardwareLight() {
