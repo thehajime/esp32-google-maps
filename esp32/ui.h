@@ -148,7 +148,6 @@ namespace UI {
 		lv_label_set_text(lblEta, "");
 		lv_obj_set_style_text_color(lblEta, lv_color_make(0x55, 0x55, 0x55), LV_PART_MAIN);
 
-#ifdef HORIZONTAL
 #define LEFT_PART_WIDTH  (SCREEN_WIDTH / 2)
 #define RIGHT_PART_WIDTH (SCREEN_WIDTH - LEFT_PART_WIDTH)
 
@@ -160,7 +159,7 @@ namespace UI {
 
 		lv_label_set_long_mode(lblSpeed, LV_LABEL_LONG_SCROLL_CIRCULAR);
 		lv_obj_set_style_width(lblSpeed, SCREEN_WIDTH/2, LV_PART_MAIN);
-		lv_obj_set_style_text_font(lblSpeed, get_montserrat_number_bold_48(), LV_STATE_DEFAULT);
+		lv_obj_set_style_text_font(lblSpeed, &montserrat_bold_64, LV_STATE_DEFAULT);
 		lv_obj_set_style_text_align(lblSpeed, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
 		lv_obj_align(lblSpeed, LV_ALIGN_LEFT_MID, -30, 0);
 
@@ -175,13 +174,11 @@ namespace UI {
 		lv_obj_set_style_text_align(lblDistanceToNextRoad, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
 		lv_obj_align(lblDistanceToNextRoad, LV_ALIGN_TOP_MID, 0, 30);
 
-		if (Pref::isNextRoad) {
-			lv_label_set_long_mode(lblNextRoad, LV_LABEL_LONG_SCROLL_CIRCULAR);
-			lv_obj_set_style_width(lblNextRoad, SCREEN_WIDTH/2, LV_PART_MAIN);
-			lv_obj_set_style_text_font(lblNextRoad, &mochiy_pop_one_32, LV_STATE_DEFAULT);
-			lv_obj_set_style_text_align(lblNextRoad, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-			lv_obj_align_to(lblNextRoad, lblNextRoadDesc, LV_ALIGN_TOP_LEFT, 0, 20);
-		}
+		lv_label_set_long_mode(lblNextRoad, LV_LABEL_LONG_SCROLL_CIRCULAR);
+		lv_obj_set_style_width(lblNextRoad, SCREEN_WIDTH/2, LV_PART_MAIN);
+		lv_obj_set_style_text_font(lblNextRoad, &mochiy_pop_one_32, LV_STATE_DEFAULT);
+		lv_obj_set_style_text_align(lblNextRoad, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
+		lv_obj_align_to(lblNextRoad, lblDistanceToNextRoad, LV_ALIGN_TOP_LEFT, 0, 50);
 
 		lv_label_set_long_mode(lblNextRoadDesc, LV_LABEL_LONG_SCROLL_CIRCULAR);
 		lv_obj_set_style_width(lblNextRoadDesc, SCREEN_WIDTH/2, LV_PART_MAIN);
@@ -194,49 +191,6 @@ namespace UI {
 		lv_obj_set_style_text_font(lblEta, &mochiy_pop_one_32, LV_STATE_DEFAULT);
 		lv_obj_set_style_text_align(lblEta, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
 		lv_obj_align_to(lblEta, lblNextRoadDesc, LV_ALIGN_TOP_LEFT, 0, 30);
-
-
-
-#else
-		lv_obj_set_style_width(imgTbtIcon, ICON_WIDTH, LV_PART_MAIN);
-		lv_obj_set_style_height(imgTbtIcon, ICON_HEIGHT, LV_PART_MAIN);
-		lv_obj_align(imgTbtIcon, LV_ALIGN_TOP_LEFT, 10, 10);
-
-		lv_label_set_long_mode(lblSpeed, LV_LABEL_LONG_SCROLL_CIRCULAR);
-		lv_obj_set_style_width(lblSpeed, SCREEN_WIDTH / 2 - 12, LV_PART_MAIN);
-		lv_obj_set_style_text_font(lblSpeed, get_montserrat_number_bold_48(), LV_STATE_DEFAULT);
-		lv_obj_set_style_text_align(lblSpeed, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-		lv_obj_align(lblSpeed, LV_ALIGN_TOP_RIGHT, -12, 15);
-
-		lv_obj_set_style_width(lblSpeedUnit, SCREEN_WIDTH / 2 - 12, LV_PART_MAIN);
-		lv_obj_set_style_text_font(lblSpeedUnit, get_montserrat_24(), LV_STATE_DEFAULT);
-		lv_obj_set_style_text_align(lblSpeedUnit, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-		lv_obj_align(lblSpeedUnit, LV_ALIGN_TOP_RIGHT, -12, 50);
-
-		lv_label_set_long_mode(lblDistanceToNextRoad, LV_LABEL_LONG_SCROLL_CIRCULAR);
-		lv_obj_set_style_width(lblDistanceToNextRoad, SCREEN_WIDTH, LV_PART_MAIN);
-		lv_obj_set_style_text_font(lblDistanceToNextRoad, get_montserrat_bold_28(), LV_STATE_DEFAULT);
-		lv_obj_set_style_text_align(lblDistanceToNextRoad, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-		lv_obj_align(lblDistanceToNextRoad, LV_ALIGN_TOP_MID, 0, 85);
-
-		lv_label_set_long_mode(lblNextRoad, LV_LABEL_LONG_WRAP);
-		lv_obj_set_style_width(lblNextRoad, SCREEN_WIDTH, LV_PART_MAIN);
-		lv_obj_set_style_text_font(lblNextRoad, get_montserrat_semibold_28(), LV_STATE_DEFAULT);
-		lv_obj_set_style_text_align(lblNextRoad, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-		lv_obj_align_to(lblNextRoad, lblDistanceToNextRoad, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 0);
-
-		lv_label_set_long_mode(lblNextRoadDesc, LV_LABEL_LONG_WRAP);
-		lv_obj_set_style_width(lblNextRoadDesc, SCREEN_WIDTH, LV_PART_MAIN);
-		lv_obj_set_style_text_font(lblNextRoadDesc, get_montserrat_semibold_24(), LV_STATE_DEFAULT);
-		lv_obj_set_style_text_align(lblNextRoadDesc, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-		// FIXME: align not working for wrapped text when height changes
-		lv_obj_align_to(lblNextRoadDesc, lblNextRoad, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 0);
-
-		lv_label_set_long_mode(lblEta, LV_LABEL_LONG_SCROLL_CIRCULAR);
-		lv_obj_set_style_text_font(lblEta, get_montserrat_24(), LV_STATE_DEFAULT);
-		lv_obj_set_style_width(lblEta, SCREEN_WIDTH, LV_PART_MAIN);
-		lv_obj_align(lblEta, LV_ALIGN_BOTTOM_MID, 0, -5);
-#endif
 
 		lv_obj_add_event_cb(screen_main, cb_screen_event_gesture, LV_EVENT_GESTURE, NULL);
 	}
