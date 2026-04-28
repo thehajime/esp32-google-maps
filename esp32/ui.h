@@ -160,7 +160,7 @@ namespace UI {
 
 		lv_label_set_long_mode(lblSpeed, LV_LABEL_LONG_SCROLL_CIRCULAR);
 		lv_obj_set_style_width(lblSpeed, SCREEN_WIDTH/2, LV_PART_MAIN);
-		lv_obj_set_style_text_font(lblSpeed, &montserrat_bold_64, LV_STATE_DEFAULT);
+		lv_obj_set_style_text_font(lblSpeed, get_montserrat_number_bold_48(), LV_STATE_DEFAULT);
 		lv_obj_set_style_text_align(lblSpeed, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
 		lv_obj_align(lblSpeed, LV_ALIGN_LEFT_MID, -30, 0);
 
@@ -171,7 +171,7 @@ namespace UI {
 
 		lv_label_set_long_mode(lblDistanceToNextRoad, LV_LABEL_LONG_SCROLL_CIRCULAR);
 		lv_obj_set_style_width(lblDistanceToNextRoad, SCREEN_WIDTH/2, LV_PART_MAIN);
-		lv_obj_set_style_text_font(lblDistanceToNextRoad, &montserrat_bold_64, LV_STATE_DEFAULT);
+		lv_obj_set_style_text_font(lblDistanceToNextRoad, get_montserrat_number_bold_48(), LV_STATE_DEFAULT);
 		lv_obj_set_style_text_align(lblDistanceToNextRoad, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
 		lv_obj_align(lblDistanceToNextRoad, LV_ALIGN_TOP_MID, 0, 30);
 
