@@ -123,7 +123,7 @@ namespace UI {
 		lv_label_set_text(lblSpeedUnit, "km/h");
 
 		lblDistanceToNextRoad = lv_label_create(screen_main);
-		lv_label_set_text(lblDistanceToNextRoad, "CatDrive");
+		lv_label_set_text(lblDistanceToNextRoad, "--m");
 		lv_obj_set_style_text_color(lblDistanceToNextRoad, lv_color_make(0x55, 0x55, 0x55), LV_PART_MAIN);
 
 		lblNextRoad = lv_label_create(screen_main);
@@ -161,7 +161,7 @@ namespace UI {
 
 		lv_label_set_long_mode(lblDistanceToNextRoad, LV_LABEL_LONG_SCROLL_CIRCULAR);
 		lv_obj_set_style_width(lblDistanceToNextRoad, SCREEN_WIDTH/2, LV_PART_MAIN);
-		lv_obj_set_style_text_font(lblDistanceToNextRoad, get_montserrat_number_bold_48(), LV_STATE_DEFAULT);
+		lv_obj_set_style_text_font(lblDistanceToNextRoad, &montserrat_bold_64, LV_STATE_DEFAULT);
 		lv_obj_set_style_text_align(lblDistanceToNextRoad, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
 		lv_obj_align(lblDistanceToNextRoad, LV_ALIGN_TOP_MID, 0, 30);
 
