@@ -129,9 +129,11 @@ namespace UI {
 		lblNextRoad = lv_label_create(screen_main);
 		lv_label_set_text(lblNextRoad, "welcome!");
 
+#if 0
 		lblNextRoadDesc = lv_label_create(screen_main);
 		lv_label_set_text(lblNextRoadDesc, "");
 		lv_obj_set_style_text_color(lblNextRoadDesc, lv_color_make(0x55, 0x55, 0x55), LV_PART_MAIN);
+#endif
 
 		lblEta = lv_label_create(screen_main);
 		lv_label_set_text(lblEta, "");
@@ -167,19 +169,21 @@ namespace UI {
 		lv_obj_set_style_width(lblNextRoad, SCREEN_WIDTH/2, LV_PART_MAIN);
 		lv_obj_set_style_text_font(lblNextRoad, &mochiy_pop_one_32, LV_STATE_DEFAULT);
 		lv_obj_set_style_text_align(lblNextRoad, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-		lv_obj_align_to(lblNextRoad, lblDistanceToNextRoad, LV_ALIGN_TOP_LEFT, 0, 50);
+		lv_obj_align(lblNextRoad, LV_ALIGN_BOTTOM_MID, 0, -90);
 
+#if 0
 		lv_label_set_long_mode(lblNextRoadDesc, LV_LABEL_LONG_SCROLL_CIRCULAR);
 		lv_obj_set_style_width(lblNextRoadDesc, SCREEN_WIDTH/2, LV_PART_MAIN);
 		lv_obj_set_style_text_font(lblNextRoadDesc, &mochiy_pop_one_32, LV_STATE_DEFAULT);
 		lv_obj_set_style_text_align(lblNextRoadDesc, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-		lv_obj_align(lblNextRoadDesc, LV_ALIGN_BOTTOM_MID, 0, -80);
+		lv_obj_align(lblNextRoadDesc, LV_ALIGN_BOTTOM_MID, 0, -90);
+#endif
 
 		lv_label_set_long_mode(lblEta, LV_LABEL_LONG_SCROLL_CIRCULAR);
 		lv_obj_set_style_width(lblEta, SCREEN_WIDTH/1.5, LV_PART_MAIN);
 		lv_obj_set_style_text_font(lblEta, &mochiy_pop_one_32, LV_STATE_DEFAULT);
 		lv_obj_set_style_text_align(lblEta, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-		lv_obj_align_to(lblEta, lblNextRoadDesc, LV_ALIGN_TOP_LEFT, 0, 30);
+		lv_obj_align_to(lblEta, lblNextRoad, LV_ALIGN_TOP_MID, 0, 30);
 
 		lv_obj_add_event_cb(screen_main, cb_screen_event_gesture, LV_EVENT_GESTURE, NULL);
 	}
@@ -350,8 +354,6 @@ namespace Data {
 	}
 
 	void setSpeed(const int& value) {
-		TRACE();
-		DUMP(value);
 		if (value == details::speed)
 			return;
 
@@ -368,8 +370,6 @@ namespace Data {
 	}
 
 	void setNextRoad(const String& value) {
-		TRACE();
-		DUMP(value);
 		if (value == details::nextRoad)
 			return;
 
@@ -386,22 +386,14 @@ namespace Data {
 	}
 
 	void setNextRoadDesc(const String& value) {
-		TRACE();
-		DUMP(value);
 		if (value == details::nextRoadDesc)
 			return;
 
 		details::nextRoadDesc = value;
-		if (value.isEmpty()) {
-			if (!Data::details::nextRoad.isEmpty())
-				lv_label_set_text(UI::details::lblNextRoadDesc,
-						  Data::details::nextRoad.c_str());
-			else
-				lv_label_set_text(UI::details::lblNextRoadDesc, "none");
-			return;
-		}
 
+#if 0
 		lv_label_set_text(UI::details::lblNextRoadDesc, value.c_str());
+#endif
 	}
 
 	String eta() {
@@ -409,14 +401,12 @@ namespace Data {
 	}
 
 	void setEta(const String& value) {
-		TRACE();
-		DUMP(value);
 		if (value == details::eta)
 			return;
 
 		details::eta = value;
 
-		lv_label_set_text(UI::details::lblEta, fullEta().c_str());
+		lv_label_set_text(UI::details::lblEta, eta().c_str());
 	}
 
 	String ete() {
@@ -428,7 +418,7 @@ namespace Data {
 			return;
 		details::ete = value;
 
-		lv_label_set_text(UI::details::lblEta, fullEta().c_str());
+		lv_label_set_text(UI::details::lblEta, eta().c_str());
 	}
 
 	String totalDistance() {
@@ -440,7 +430,7 @@ namespace Data {
 			return;
 		details::totalDistance = value;
 
-		lv_label_set_text(UI::details::lblEta, fullEta().c_str());
+		lv_label_set_text(UI::details::lblEta, eta().c_str());
 	}
 
 	String distanceToNextTurn() {
@@ -448,8 +438,6 @@ namespace Data {
 	}
 
 	void setDistanceToNextTurn(const String& value) {
-		TRACE();
-		DUMP(value);
 		if (value == details::distanceToNextTurn)
 			return;
 		details::distanceToNextTurn = value;
