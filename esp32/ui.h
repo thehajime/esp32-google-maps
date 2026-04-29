@@ -161,7 +161,7 @@ namespace UI {
 
 		lv_label_set_long_mode(lblDistanceToNextRoad, LV_LABEL_LONG_SCROLL_CIRCULAR);
 		lv_obj_set_style_width(lblDistanceToNextRoad, SCREEN_WIDTH/2, LV_PART_MAIN);
-		lv_obj_set_style_text_font(lblDistanceToNextRoad, &montserrat_bold_64, LV_STATE_DEFAULT);
+		lv_obj_set_style_text_font(lblDistanceToNextRoad, get_montserrat_number_bold_48(), LV_STATE_DEFAULT);
 		lv_obj_set_style_text_align(lblDistanceToNextRoad, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
 		lv_obj_align(lblDistanceToNextRoad, LV_ALIGN_TOP_MID, 0, 30);
 
@@ -188,9 +188,15 @@ namespace UI {
 		lv_obj_add_event_cb(screen_main, cb_screen_event_gesture, LV_EVENT_GESTURE, NULL);
 	}
 
-	void restart_handler(lv_event_t *e) {
-		Serial.println("Restarting...");
-		ESP.restart();
+	void cb_button_handler(lv_event_t *e) {
+		if (strcmp((char *)lv_event_get_user_data(e), "reset") == 0) {
+			Serial.println("Restarting...");
+			ESP.restart();
+		} else if (strcmp((char *)lv_event_get_user_data(e), "sleep") == 0) {
+			Serial.println("Sleeping...");
+			esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_OFF);
+			esp_deep_sleep_start();
+		}
 	}
 
 	void splash_screen_init(void) {
@@ -211,11 +217,22 @@ namespace UI {
 		lv_obj_align(battLabel, LV_ALIGN_BOTTOM_MID, 0, -50);
 
 		lv_obj_t *resetButton = lv_btn_create(screen_splash);
-		lv_obj_add_event_cb(resetButton, restart_handler, LV_EVENT_PRESSED, NULL);
+		lv_obj_add_event_cb(resetButton, cb_button_handler, LV_EVENT_PRESSED, (void *)"reset");
 		lv_obj_align(resetButton, LV_ALIGN_CENTER, 0, -40);
+		lv_obj_set_style_bg_color(resetButton, lv_color_make(0x22, 0x22, 0x22), LV_PART_MAIN);
 		lv_obj_t *resetBLabel = lv_label_create(resetButton);
 		lv_obj_set_style_text_font(resetBLabel, get_montserrat_24(), LV_STATE_DEFAULT);
 		lv_label_set_text(resetBLabel, "Reset");
+
+		esp_sleep_enable_timer_wakeup(10 * 1000000);
+		//esp_sleep_enable_touchpad_wakeup();
+		lv_obj_t *sleepButton = lv_btn_create(screen_splash);
+		lv_obj_add_event_cb(sleepButton, cb_button_handler, LV_EVENT_PRESSED, (void *)"sleep");
+		lv_obj_align(sleepButton, LV_ALIGN_CENTER, 0, 40);
+		lv_obj_set_style_bg_color(sleepButton, lv_color_make(0x22, 0x22, 0x22), LV_PART_MAIN);
+		lv_obj_t *sleepBLabel = lv_label_create(sleepButton);
+		lv_obj_set_style_text_font(sleepBLabel, get_montserrat_24(), LV_STATE_DEFAULT);
+		lv_label_set_text(sleepBLabel, "Sleep");
 
 		lv_obj_add_event_cb(screen_splash, cb_screen_event_gesture, LV_EVENT_GESTURE, NULL);
 	}
