@@ -24,18 +24,7 @@
 #define SCREEN_WIDTH  466
 #define SCREEN_HEIGHT 466
 
-class SimpleSh8601;
-SimpleSh8601 lcd(&SPI,
-                 SPISettings(80000000, MSBFIRST, SPI_MODE0),
-                 SCREEN_HEIGHT,
-                 SCREEN_HEIGHT,
-                 PIN_LCD_CS,
-                 PIN_LCD_DC,
-                 PIN_LCD_RST,
-                 PIN_BACKLIGHT,
-                 SimpleSh8601::ROTATION_0
-);
-
+SimpleDisplay *lcd;
 
 namespace Data {
 	namespace details {
@@ -219,7 +208,19 @@ namespace UI {
 	void init() {
 		using namespace details;
 
-		lcd.init();
+		if (SimpleDisplay::readLcdId() == LCD_ID_SH8601) {
+			lcd = new SimpleSh8601(&SPI,
+					       SPISettings(80000000, MSBFIRST, SPI_MODE0),
+					       SCREEN_HEIGHT,
+					       SCREEN_HEIGHT,
+					       PIN_LCD_CS,
+					       PIN_LCD_DC,
+					       PIN_LCD_RST,
+					       PIN_BACKLIGHT,
+					       SimpleSh8601::ROTATION_0
+				);
+		}
+		lcd->init();
 		main_screen_init();
 		splash_screen_init();
 		lv_scr_load(screen_main);

@@ -4,6 +4,10 @@
 #include <Arduino.h>
 #include <SPI.h>
 
+#define LCD_ID_ST7789		0
+#define LCD_ID_SH8601		1
+#define LCD_ID_CO5300		2
+
 class SimpleDisplay {
   public:
 	enum Rotation { ROTATION_0, ROTATION_90, ROTATION_180, ROTATION_270 };
@@ -20,13 +24,14 @@ class SimpleDisplay {
 		: _spi(spi), _spiSettings(spiSettings), _width(width), _height(height), _pinCs(cs), _pinDc(dc), _pinRst(rst),
 		_pinBacklight(backlight), _rotation(rotation), _xOffset(0), _yOffset(0) {
 	};
-	void init();
+	virtual void init();
 	void reset();
-	void setRotation(Rotation rotation);
+	virtual void setRotation(Rotation rotation);
 	void setOffset(uint16_t xOffset, uint16_t yOffset);
-	void setBrightness(uint8_t percent);
+	virtual void setBrightness(uint8_t percent);
 	void flushWindow(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t* color);
-	void invertDisplay(bool invert);
+	virtual void invertDisplay(bool invert);
+	static int readLcdId() { return LCD_ID_SH8601; }; /* XXX: to be implemented */
 
   protected:
 	void setAddrWindow(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2);
@@ -68,17 +73,14 @@ public:
 		     uint8_t rst,
 		     uint8_t backlight,
 		     Rotation rotation);
-	void init();
+	void init() override;
 	void reset();
-	void setRotation(Rotation rotation);
+	void setRotation(Rotation rotation) override;
 	void setOffset(uint16_t xOffset, uint16_t yOffset);
-	void setBrightness(uint8_t percent);
+	void setBrightness(uint8_t percent) override;
 	void flushWindow(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t* color);
-	void invertDisplay(bool invert);
+	void invertDisplay(bool invert) override;
 protected:
-	void setAddrWindow(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2);
-	void sendCommand(uint8_t command, const uint8_t* data = nullptr, size_t size = 0);
-	void sendData(const uint8_t* data, size_t size);
 };
 
 #endif

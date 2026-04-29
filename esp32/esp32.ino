@@ -23,7 +23,7 @@ void onCharacteristicWrite(const String& uuid, uint8_t* data, size_t length) {
 		Pref::brightness = kv.getOrDefault("brightness", "100").toInt();
 		Pref::speedLimit = kv.getOrDefault("speedLimit", "60").toInt();
 
-		lcd.setBrightness(Pref::brightness);
+		lcd->setBrightness(Pref::brightness);
 		Pref::lightTheme ? ThemeControl::light() : ThemeControl::dark();
 
 		if (kv.contains("removeAllFiles")) {
@@ -133,7 +133,7 @@ void setup() {
 
 	Data::init();
 
-	lcd.setBrightness(Pref::brightness);
+	lcd->setBrightness(Pref::brightness);
 	ThemeControl::dark();
 
 	/* init battery */

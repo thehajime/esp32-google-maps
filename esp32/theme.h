@@ -4,9 +4,7 @@
 #include "lcd.h"
 #include "scheduler.h"
 
-class SimpleSh8601;
-
-extern SimpleSh8601 lcd;
+extern SimpleDisplay *lcd;
 
 namespace ThemeControl {
 	namespace detail {
@@ -22,7 +20,7 @@ namespace ThemeControl {
 				return;
 
 			isLightHardware = value;
-			value ? lcd.invertDisplay(false) : lcd.invertDisplay(true);
+			value ? lcd->invertDisplay(false) : lcd->invertDisplay(true);
 		}
 
 		bool isHardwareLight() {
