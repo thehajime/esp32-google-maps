@@ -188,6 +188,11 @@ namespace UI {
 		lv_obj_add_event_cb(screen_main, cb_screen_event_gesture, LV_EVENT_GESTURE, NULL);
 	}
 
+	void restart_handler(lv_event_t *e) {
+		Serial.println("Restarting...");
+		ESP.restart();
+	}
+
 	void splash_screen_init(void) {
 		screen_splash = lv_obj_create(NULL);
 		screens[0] = screen_splash;
@@ -204,6 +209,13 @@ namespace UI {
 		lv_obj_set_style_text_font(battLabel, &mochiy_pop_one_32, LV_STATE_DEFAULT);
 		lv_obj_set_style_text_align(battLabel, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
 		lv_obj_align(battLabel, LV_ALIGN_BOTTOM_MID, 0, -50);
+
+		lv_obj_t *resetButton = lv_btn_create(screen_splash);
+		lv_obj_add_event_cb(resetButton, restart_handler, LV_EVENT_PRESSED, NULL);
+		lv_obj_align(resetButton, LV_ALIGN_CENTER, 0, -40);
+		lv_obj_t *resetBLabel = lv_label_create(resetButton);
+		lv_obj_set_style_text_font(resetBLabel, get_montserrat_24(), LV_STATE_DEFAULT);
+		lv_label_set_text(resetBLabel, "Reset");
 
 		lv_obj_add_event_cb(screen_splash, cb_screen_event_gesture, LV_EVENT_GESTURE, NULL);
 	}
