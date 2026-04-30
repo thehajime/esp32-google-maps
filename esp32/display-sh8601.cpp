@@ -9,7 +9,6 @@
 #include "esp_lcd_panel_vendor.h"
 #include "esp_lcd_panel_commands.h"
 #include "src/sh8601/esp_lcd_sh8601.h"
-#include "user_config.h"
 #include <lvgl.h>
 #include <SPI.h>
 

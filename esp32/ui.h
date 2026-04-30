@@ -11,7 +11,6 @@
 #include "SPIFFS.h"
 #include "ble.h"
 #include <lvgl.h>
-#include "user_config.h"
 
 #define FS                      SPIFFS
 #define FORMAT_SPIFFS_IF_FAILED true
