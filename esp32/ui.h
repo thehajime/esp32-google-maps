@@ -145,7 +145,7 @@ namespace UI {
 		// Image top middle
 		lv_obj_set_style_width(imgTbtIcon, ICON_WIDTH, LV_PART_MAIN);
 		lv_obj_set_style_height(imgTbtIcon, ICON_HEIGHT, LV_PART_MAIN);
-		lv_img_set_zoom(imgTbtIcon, 256*2);
+		lv_img_set_zoom(imgTbtIcon, 256*2.5);
 		lv_obj_align(imgTbtIcon, LV_ALIGN_CENTER, 10, 10);
 
 		lv_label_set_long_mode(lblSpeed, LV_LABEL_LONG_SCROLL_CIRCULAR);
@@ -169,7 +169,7 @@ namespace UI {
 		lv_obj_set_style_width(lblNextRoad, SCREEN_WIDTH/2, LV_PART_MAIN);
 		lv_obj_set_style_text_font(lblNextRoad, &mochiy_pop_one_32, LV_STATE_DEFAULT);
 		lv_obj_set_style_text_align(lblNextRoad, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-		lv_obj_align(lblNextRoad, LV_ALIGN_BOTTOM_MID, 0, -90);
+		lv_obj_align_to(lblNextRoad, lblDistanceToNextRoad, LV_ALIGN_TOP_MID, 0, 60);
 
 #if 0
 		lv_label_set_long_mode(lblNextRoadDesc, LV_LABEL_LONG_SCROLL_CIRCULAR);
@@ -183,7 +183,7 @@ namespace UI {
 		lv_obj_set_style_width(lblEta, SCREEN_WIDTH/1.5, LV_PART_MAIN);
 		lv_obj_set_style_text_font(lblEta, &mochiy_pop_one_32, LV_STATE_DEFAULT);
 		lv_obj_set_style_text_align(lblEta, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-		lv_obj_align_to(lblEta, lblNextRoad, LV_ALIGN_TOP_MID, 0, 30);
+		lv_obj_align(lblEta, LV_ALIGN_BOTTOM_MID, 0, -50);
 
 		lv_obj_add_event_cb(screen_main, cb_screen_event_gesture, LV_EVENT_GESTURE, NULL);
 	}
@@ -435,7 +435,7 @@ namespace Data {
 
 		details::eta = value;
 
-		lv_label_set_text(UI::details::lblEta, eta().c_str());
+		lv_label_set_text(UI::details::lblEta, (ete() + "-" + eta()).c_str());
 	}
 
 	String ete() {
@@ -447,7 +447,7 @@ namespace Data {
 			return;
 		details::ete = value;
 
-		lv_label_set_text(UI::details::lblEta, eta().c_str());
+		lv_label_set_text(UI::details::lblEta, (ete() + "-" + eta()).c_str());
 	}
 
 	String totalDistance() {
@@ -459,7 +459,7 @@ namespace Data {
 			return;
 		details::totalDistance = value;
 
-		lv_label_set_text(UI::details::lblEta, eta().c_str());
+		lv_label_set_text(UI::details::lblEta, (ete() + "-" + eta()).c_str());
 	}
 
 	String distanceToNextTurn() {
