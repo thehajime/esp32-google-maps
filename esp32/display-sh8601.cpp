@@ -35,7 +35,6 @@ static SemaphoreHandle_t lvgl_mux = NULL;
 #define BUFF_SIZE (LCD_H_RES * LVGL_BUF_HEIGHT * BYTES_PER_PIXEL)
 static esp_lcd_panel_io_handle_t amoled_panel_io_handle = NULL;
 static i2c_master_dev_handle_t disp_touch_dev_handle = NULL;
-static SemaphoreHandle_t flush_done_semaphore = NULL;
 uint8_t *lvgl_dest = NULL;
 static lv_display_t *disp;
 
@@ -85,18 +84,7 @@ static void _lvgl_flush_cb(lv_display_t * disp, const lv_area_t * area, uint8_t 
 		lvgl_dest = color_p;
 	}
 	esp_lcd_panel_draw_bitmap(panel_handle, area->x1, area->y1, area->x2+1, area->y2+1, lvgl_dest);
-}
-
-static void _lvgl_flush_wait_cb(lv_display_t * disp) //等待发送数据完成,使用lvgl_flush_wait_cb 不需要再使用lv_disp_flush_ready(disp);
-{
-	xSemaphoreTake(flush_done_semaphore, portMAX_DELAY);
-}
-
-static bool _notify_lvgl_flush_ready(esp_lcd_panel_io_handle_t panel_io, esp_lcd_panel_io_event_data_t *edata, void *user_ctx)
-{
-	BaseType_t high_task_awoken = pdFALSE;
-	xSemaphoreGiveFromISR(flush_done_semaphore, &high_task_awoken);
-	return high_task_awoken == pdTRUE;
+	lv_display_flush_ready(disp);
 }
 
 i2c_master_bus_handle_t user_i2c_port0_handle;
@@ -199,8 +187,6 @@ static void TouchInputReadCallback(lv_indev_t * indev, lv_indev_data_t *indevDat
 }
 
 void SimpleSh8601::init() {
-	flush_done_semaphore = xSemaphoreCreateBinary();
-	assert(flush_done_semaphore);
 
 	spi_bus_config_t buscfg = {
 		.data0_io_num = LCD_D0_PIN,
@@ -219,8 +205,6 @@ void SimpleSh8601::init() {
 		.spi_mode = 0,
 		.pclk_hz = 40 * 1000 * 1000,
 		.trans_queue_depth = 10,
-		.on_color_trans_done = _notify_lvgl_flush_ready,
-		//.user_ctx = &disp_drv;
 		.lcd_cmd_bits = 32,
 		.lcd_param_bits = 8,
 	};
@@ -256,7 +240,6 @@ void SimpleSh8601::init() {
 	lv_init();
 	disp = lv_display_create(LCD_H_RES, LCD_V_RES);
 	lv_display_set_flush_cb(disp, _lvgl_flush_cb);
-	lv_display_set_flush_wait_cb(disp, _lvgl_flush_wait_cb);
 	uint8_t *buf_1 = NULL;
 	uint8_t *buf_2 = NULL;
 	buf_1 = (uint8_t *)heap_caps_malloc(BUFF_SIZE, MALLOC_CAP_DMA);
