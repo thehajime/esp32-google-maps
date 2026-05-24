@@ -8,6 +8,7 @@
 #include "battery.h"
 
 #include <queue>
+#include <esp_task_wdt.h>
 
 std::queue<String> navigationQueue{};
 bool connectionChanged = true;
@@ -139,6 +140,14 @@ void setup() {
 	/* init battery */
 	initBatery();
 
+	/* watchdog init */
+	esp_task_wdt_config_t wdt_cfg = {
+		.timeout_ms = 15*1000,
+		.trigger_panic = true,
+	};
+	esp_task_wdt_init(&wdt_cfg);
+	esp_task_wdt_add(NULL);
+
 	Serial.println("Init done");
 }
 
@@ -147,6 +156,7 @@ bool isOverspeed(int speed) {
 }
 
 void loop() {
+	esp_task_wdt_reset();
 	UI::update();
 	ThemeControl::update();
 	Data::update();
