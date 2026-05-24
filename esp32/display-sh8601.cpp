@@ -28,7 +28,6 @@ SimpleSh8601::SimpleSh8601(SPIClass* spi,
 #define LCD_OPCODE_READ_CMD         (0x03ULL)
 #define LCD_OPCODE_WRITE_COLOR      (0x32ULL)
 
-static SemaphoreHandle_t lvgl_mux = NULL;
 #define LCD_HOST    SPI2_HOST
 #define LCD_BIT_PER_PIXEL 16
 #define BYTES_PER_PIXEL (LV_COLOR_FORMAT_GET_SIZE(LV_COLOR_FORMAT_RGB565))
@@ -120,44 +119,6 @@ static void _lvgl_rounder_cb(lv_event_t *e)
 
 	area->x2 = ((x2 >> 1) << 1) + 1;
 	area->y2 = ((y2 >> 1) << 1) + 1;
-}
-
-static bool _lvgl_lock(int timeout_ms)
-{
-	assert(lvgl_mux && "bsp_display_start must be called first");
-
-	const TickType_t timeout_ticks = (timeout_ms == -1) ? portMAX_DELAY : pdMS_TO_TICKS(timeout_ms);
-	return xSemaphoreTake(lvgl_mux, timeout_ticks) == pdTRUE;
-}
-
-static void _lvgl_unlock(void)
-{
-	assert(lvgl_mux && "bsp_display_start must be called first");
-	xSemaphoreGive(lvgl_mux);
-}
-
-static void _lvgl_port_task(void *arg)
-{
-	uint32_t task_delay_ms = LVGL_TASK_MAX_DELAY_MS;
-	for(;;)
-	{
-		// Lock the mutex due to the LVGL APIs are not thread-safe
-		if (_lvgl_lock(-1))
-		{
-			task_delay_ms = lv_timer_handler();
-			// Release the mutex
-			_lvgl_unlock();
-		}
-		if (task_delay_ms > LVGL_TASK_MAX_DELAY_MS)
-		{
-			task_delay_ms = LVGL_TASK_MAX_DELAY_MS;
-		}
-		else if (task_delay_ms < LVGL_TASK_MIN_DELAY_MS)
-		{
-			task_delay_ms = LVGL_TASK_MIN_DELAY_MS;
-		}
-		vTaskDelay(pdMS_TO_TICKS(task_delay_ms));
-	}
 }
 
 static void TouchInputReadCallback(lv_indev_t * indev, lv_indev_data_t *indevData)
@@ -262,16 +223,6 @@ void SimpleSh8601::init() {
 	esp_timer_handle_t lvgl_tick_timer = NULL;
 	ESP_ERROR_CHECK(esp_timer_create(&lvgl_tick_timer_args, &lvgl_tick_timer));
 	ESP_ERROR_CHECK(esp_timer_start_periodic(lvgl_tick_timer, LVGL_TICK_PERIOD_MS * 1000));
-
-
-	lvgl_mux = xSemaphoreCreateMutex(); //mutex semaphores
-	assert(lvgl_mux);
-	xTaskCreate(_lvgl_port_task, "LVGL", LVGL_TASK_STACK_SIZE, NULL, LVGL_TASK_PRIORITY, NULL);
-	if (_lvgl_lock(-1))
-	{ 
-		// Release the mutex
-		_lvgl_unlock();
-	}
 
 	delay(120);
 	setRotation(_rotation);
