@@ -44,7 +44,7 @@ namespace Data {
 	} // namespace details
 } // namespace Data
 
-LV_IMG_DECLARE(mod_circle);
+LV_IMG_DECLARE(mod_circle_color);
 namespace UI {
 	namespace details {
 		lv_obj_t* lblSpeed;
@@ -206,7 +206,7 @@ namespace UI {
 
 		lv_obj_t *imgBg = lv_img_create(screen_splash);
 		lv_obj_set_style_bg_color(imgBg, lv_color_make(0xFF, 0xFF, 0xFF), LV_PART_MAIN);
-		lv_img_set_src(imgBg, &mod_circle);
+		lv_img_set_src(imgBg, &mod_circle_color);
 
 		battLabel = lv_label_create(screen_splash);
 		lv_label_set_text(battLabel, "Batt");
