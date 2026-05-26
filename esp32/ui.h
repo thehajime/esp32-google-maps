@@ -10,6 +10,7 @@
 #include "FS.h"
 #include "SPIFFS.h"
 #include "ble.h"
+#include "meter.h"
 #include <lvgl.h>
 
 #define FS                      SPIFFS
@@ -58,10 +59,11 @@ namespace UI {
 		uint32_t lastUpdate = 0;
 	} // namespace details
 
-#define MAX_SCREENS 2
+#define MAX_SCREENS 3
 	lv_obj_t *screens[MAX_SCREENS];
 	lv_obj_t *screen_main;
 	lv_obj_t *screen_splash;
+	lv_obj_t *screen_meter;
 	lv_obj_t *screen_current;
 	lv_obj_t *battLabel;
 
@@ -116,7 +118,7 @@ namespace UI {
 
 		lblSpeed = lv_label_create(screen_main);
 		lv_label_set_text(lblSpeed, "0");
-		lv_obj_set_style_text_color(lblSpeed, lv_color_make(0xFF, 0x00, 0x00), LV_PART_MAIN);
+		lv_obj_set_style_text_color(lblSpeed, lv_color_make(0x00, 0x00, 0x00), LV_PART_MAIN);
 
 		lblSpeedUnit = lv_label_create(screen_main);
 		lv_label_set_text(lblSpeedUnit, "km/h");
@@ -147,7 +149,6 @@ namespace UI {
 		lv_img_set_zoom(imgTbtIcon, 256*2.5);
 		lv_obj_align(imgTbtIcon, LV_ALIGN_CENTER, 10, 10);
 
-		lv_label_set_long_mode(lblSpeed, LV_LABEL_LONG_SCROLL_CIRCULAR);
 		lv_obj_set_style_width(lblSpeed, SCREEN_WIDTH/2, LV_PART_MAIN);
 		lv_obj_set_style_text_font(lblSpeed, &montserrat_bold_64, LV_STATE_DEFAULT);
 		lv_obj_set_style_text_align(lblSpeed, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
@@ -237,6 +238,19 @@ namespace UI {
 	}
 
 
+	void meter_screen_init(void) {
+		screen_meter = lv_obj_create(NULL);
+		screens[2] = screen_meter;
+		lv_obj_clear_flag(screen_meter, LV_OBJ_FLAG_SCROLLABLE);
+		lv_obj_set_style_bg_opa(screen_meter, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+		lv_obj_t *imgBg = lv_img_create(screen_meter);
+		lv_obj_set_style_bg_color(imgBg, lv_color_make(0xFF, 0xFF, 0xFF), LV_PART_MAIN);
+		lv_img_set_src(imgBg, &mod_circle_color);
+
+		lv_obj_add_event_cb(screen_meter, cb_screen_event_gesture, LV_EVENT_GESTURE, NULL);
+	}
+
 	void init() {
 		using namespace details;
 
@@ -255,6 +269,7 @@ namespace UI {
 		lcd->init();
 		main_screen_init();
 		splash_screen_init();
+		meter_screen_init();
 		lv_scr_load(screen_main);
 	}
 
@@ -371,6 +386,7 @@ namespace Data {
 		setTotalDistance(String());
 		setIconHash(String());
 		details::receivedIconHash = String();
+		setSpeed(0);
 	}
 
 	void clearSpeedData() {
@@ -385,6 +401,8 @@ namespace Data {
 		if (value == details::speed)
 			return;
 
+		if (UI::screen_current == UI::screen_meter)
+			v_speedometer_set_value(UI::screen_meter, details::speed, value);
 		details::speed = value;
 		if (value == -1) {
 			lv_label_set_text(UI::details::lblSpeed, "");

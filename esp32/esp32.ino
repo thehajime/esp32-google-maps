@@ -6,6 +6,7 @@
 #include "theme.h"
 #include "ui.h"
 #include "battery.h"
+#include "meter.h"
 
 #include <queue>
 #include <esp_task_wdt.h>
@@ -178,7 +179,13 @@ void loop() {
 		}
 		readBattery();
 	}
-
+#define DUMMY_SPEED_DATA
+#ifdef DUMMY_SPEED_DATA
+	DO_EVERY(500) {
+		int speed = 30 + 30*sin((millis() / 1000));
+		navigationQueue.push(String("speed=") + speed);
+	}
+#endif
 	// Connection status
 	if (connectionChanged) {
 		connectionChanged = false;
