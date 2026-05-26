@@ -300,8 +300,10 @@ namespace UI {
 		using namespace details;
 		if (millis() - details::lastUpdate < 5)
 			return;
-		DO_EVERY(5000) {
-			lv_memory_routine();
+		if (LVGL_MEMORY_PROF) {
+			DO_EVERY(5000) {
+				lv_memory_routine();
+			}
 		}
 
 		details::lastUpdate = millis();
