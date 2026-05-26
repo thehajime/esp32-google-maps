@@ -25,6 +25,9 @@
 #define LCD_H_RES 466
 #define LCD_V_RES 466
 #define LVGL_BUF_HEIGHT 50
+#define SCREEN_WIDTH  466
+#define SCREEN_HEIGHT 466
+
 
 #define LCD_CS_PIN         GPIO_NUM_10
 #define LCD_PCLK_PIN       GPIO_NUM_11
