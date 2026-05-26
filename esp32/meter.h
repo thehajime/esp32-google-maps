@@ -29,14 +29,6 @@ void v_speedometer_init(lv_obj_t *screen_meter)
 		lv_style_set_text_color(&tick_style, lv_palette_main(LV_PALETTE_YELLOW));
 		lv_obj_add_style(scale_meter, &tick_style, LV_PART_INDICATOR);
 
-#if 0
-	lv_style_t section_style;
-	lv_style_init(&section_style);
-	lv_style_set_radius(&section_style, 5);
-	lv_scale_section_t * section = lv_scale_add_section(scale_meter);
-	lv_scale_section_set_range(section, 80, 100);
-//		lv_scale_section_set_style(section, LV_PART_INDICATOR, &section_style);
-#endif
 		lv_scale_set_angle_range(scale_meter, 270);
 		lv_scale_set_rotation(scale_meter, 135);
 	}
@@ -92,8 +84,8 @@ void v_speedometer_set_value(lv_obj_t *screen_meter, int prev, int next)
 	lv_anim_set_completed_cb(&anim_scale_line, [](lv_anim_t * a)
 		{
 //			printf("Animation Completed!\n");
-			/* w/o it it crashes... */
-			delay(10);
+			/* w/o it it crashes???... */
+//			delay(10);
 		});
 
 	lv_anim_set_repeat_count(&anim_scale_line, 0);

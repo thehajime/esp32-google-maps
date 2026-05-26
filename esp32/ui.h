@@ -245,6 +245,7 @@ namespace UI {
 		lv_obj_set_style_bg_color(imgBg, lv_color_make(0xFF, 0xFF, 0xFF), LV_PART_MAIN);
 		lv_img_set_src(imgBg, &mod_circle_color);
 
+		v_speedometer_set_value(screen_meter, 0, 0);
 		lv_obj_add_event_cb(screen_meter, cb_screen_event_gesture, LV_EVENT_GESTURE, NULL);
 	}
 
@@ -384,6 +385,7 @@ namespace Data {
 		}
 
 		listFiles();
+		setSpeed(0);
 	}
 
 	bool hasNavigationData() {
@@ -419,8 +421,7 @@ namespace Data {
 		if (value == details::speed)
 			return;
 
-		if (UI::screen_current == UI::screen_meter)
-			v_speedometer_set_value(UI::screen_meter, details::speed, value);
+		v_speedometer_set_value(UI::screen_meter, details::speed, value);
 		details::speed = value;
 		if (value == -1) {
 			lv_label_set_text(UI::details::lblSpeed, "");
