@@ -5,8 +5,13 @@
 #include <lvgl.h>
 
 static lv_obj_t *needle_line = NULL;
+static lv_obj_t *needle_img = NULL;
 static lv_obj_t *scale_meter = NULL;
 static lv_obj_t *lblSpeed = NULL;
+
+#define NEEDLE_IMG 1
+LV_IMAGE_DECLARE(vespa_gs_needle);
+
 
 void v_speedometer_init(lv_obj_t *screen_meter)
 {
@@ -22,22 +27,17 @@ void v_speedometer_init(lv_obj_t *screen_meter)
 		lv_obj_set_style_length(scale_meter, 10, LV_PART_INDICATOR);
 		lv_scale_set_range(scale_meter, 0, 100);
 
+#if 0
 		/* didn't work ? XXX??? */
 		lv_style_t tick_style;
 		lv_style_init(&tick_style);
 		lv_style_set_text_font(&tick_style, &montserrat_bold_64);
 		lv_style_set_text_color(&tick_style, lv_palette_main(LV_PALETTE_YELLOW));
 		lv_obj_add_style(scale_meter, &tick_style, LV_PART_INDICATOR);
+#endif
 
 		lv_scale_set_angle_range(scale_meter, 270);
 		lv_scale_set_rotation(scale_meter, 135);
-	}
-
-	if (needle_line == NULL) {
-		needle_line = lv_line_create(scale_meter);
-		lv_obj_set_style_line_width(needle_line, 15, LV_PART_MAIN);
-		lv_obj_set_style_line_rounded(needle_line, true, LV_PART_MAIN);
-		lv_obj_set_style_line_color(needle_line, lv_color_make(0xAA, 0x0, 0x0), LV_PART_MAIN);
 	}
 
 	if (lblSpeed == NULL) {
@@ -52,6 +52,22 @@ void v_speedometer_init(lv_obj_t *screen_meter)
 		lv_obj_set_style_text_font(lblSpeedUnit, get_montserrat_24(), LV_STATE_DEFAULT);
 		lv_obj_align_to(lblSpeedUnit, lblSpeed, LV_ALIGN_TOP_MID, 0, -28);
 
+	}
+
+#ifdef NEEDLE_IMG
+	if (needle_img == NULL) {
+		needle_img = lv_image_create(scale_meter);
+		lv_image_set_src(needle_img, &vespa_gs_needle);
+		lv_obj_align(needle_img, LV_ALIGN_CENTER, 72, 3);
+		lv_image_set_pivot(needle_img, 53, 28);
+	}
+#else
+	if (needle_line == NULL) {
+		needle_line = lv_line_create(scale_meter);
+		lv_obj_set_style_line_width(needle_line, 15, LV_PART_MAIN);
+		lv_obj_set_style_line_rounded(needle_line, true, LV_PART_MAIN);
+		lv_obj_set_style_line_color(needle_line, lv_color_make(0xAA, 0x0, 0x0), LV_PART_MAIN);
+
 		lv_obj_t *label_center = lv_label_create(screen_meter);
 		lv_obj_set_size(label_center, 30, 30);
 		lv_obj_align(label_center, LV_ALIGN_CENTER, 0, 0);
@@ -60,6 +76,8 @@ void v_speedometer_init(lv_obj_t *screen_meter)
 		lv_obj_set_style_bg_opa(label_center, LV_OPA_COVER, 0);
 		lv_obj_set_style_bg_color(label_center, lv_color_make(0x00, 0x00, 0x00), 0);
 	}
+#endif
+
 
 }
 
@@ -76,21 +94,28 @@ void v_speedometer_set_value(lv_obj_t *screen_meter, int prev, int next)
 	lv_anim_init(&anim_scale_line);
 	lv_anim_set_exec_cb(&anim_scale_line, [](void *needle, int32_t value)
 		{
-//			Serial.printf("set=%d\n", value);
+#ifdef NEEDLE_IMG
+			lv_scale_set_image_needle_value(scale_meter, (lv_obj_t *)needle, value);
+#else
 			lv_scale_set_line_needle_value(scale_meter, (lv_obj_t *)needle, SCREEN_WIDTH/2 - 40, value);
+#endif
 		});
 	/* needed to set _after_ lv_anim_set_exec_cb */
+#ifdef NEEDLE_IMG
+	lv_anim_set_var(&anim_scale_line, needle_img);
+	lv_scale_set_image_needle_value(scale_meter, needle_img, 0);
+#else
 	lv_anim_set_var(&anim_scale_line, needle_line);
+#endif
 	lv_anim_set_completed_cb(&anim_scale_line, [](lv_anim_t * a)
 		{
 //			printf("Animation Completed!\n");
 			/* w/o it it crashes???... */
-//			delay(10);
+			delay(10);
 		});
 
 	lv_anim_set_repeat_count(&anim_scale_line, 0);
 	lv_anim_set_duration(&anim_scale_line, 500);
-	lv_scale_set_line_needle_value(scale_meter, needle_line, SCREEN_WIDTH/2 - 40, 0);
 
 	lv_anim_set_values(&anim_scale_line, prev, next);
 	lv_anim_start(&anim_scale_line);
