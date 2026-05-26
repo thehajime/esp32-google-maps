@@ -280,10 +280,29 @@ namespace UI {
 		screen_current = screen_main;
 	}
 
+	void lv_memory_routine() {
+		lv_mem_monitor_t mon;
+		lv_mem_monitor(&mon);
+
+		Serial.printf("Used: %d/%d (%.1f%%), Frag: %.1f%%\n",
+			      mon.total_size - mon.free_size,
+			      mon.total_size,
+			      (mon.total_size - mon.free_size) * 100.0 / mon.total_size,
+			      mon.frag_pct
+			);
+		if (mon.frag_pct> 30.0) {
+			Serial.println("defrag");
+//                     lv_mem_defrag();
+		}
+	}
+
 	void update() {
 		using namespace details;
 		if (millis() - details::lastUpdate < 5)
 			return;
+		DO_EVERY(5000) {
+			lv_memory_routine();
+		}
 
 		details::lastUpdate = millis();
 		lv_timer_handler();
