@@ -507,6 +507,14 @@ namespace Data {
 			return;
 		details::distanceToNextTurn = value;
 
+		/* if non-ascii code */
+		if (value[0] > 127)
+			lv_obj_set_style_text_font(UI::details::lblDistanceToNextRoad,
+						   &mochiy_pop_one_32, LV_STATE_DEFAULT);
+		else
+			lv_obj_set_style_text_font(UI::details::lblDistanceToNextRoad,
+						   &montserrat_bold_64, LV_STATE_DEFAULT);
+
 		lv_label_set_text(UI::details::lblDistanceToNextRoad, value.c_str());
 	}
 
