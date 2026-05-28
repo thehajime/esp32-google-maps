@@ -215,21 +215,28 @@ namespace UI {
 
 		lv_obj_t *resetButton = lv_btn_create(screen_splash);
 		lv_obj_add_event_cb(resetButton, cb_button_handler, LV_EVENT_PRESSED, (void *)"reset");
-		lv_obj_align(resetButton, LV_ALIGN_CENTER, 0, -40);
-		lv_obj_set_style_bg_color(resetButton, lv_color_make(0x22, 0x22, 0x22), LV_PART_MAIN);
+		lv_obj_align(resetButton, LV_ALIGN_TOP_MID, -70, 70);
+		lv_obj_set_style_bg_color(resetButton, lv_color_make(0x88, 0x88, 0x88), LV_PART_MAIN);
+		lv_obj_set_size(resetButton, 70, 70);
+		lv_obj_set_style_radius(resetButton, 70, LV_PART_MAIN);
 		lv_obj_t *resetBLabel = lv_label_create(resetButton);
-		lv_obj_set_style_text_font(resetBLabel, get_montserrat_24(), LV_STATE_DEFAULT);
-		lv_label_set_text(resetBLabel, "Reset");
+		lv_obj_set_style_text_font(resetBLabel, get_montserrat_semibold_28(), LV_STATE_DEFAULT);
+		lv_obj_set_style_text_align(resetBLabel, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
+		lv_label_set_text(resetBLabel, "R");
 
 		esp_sleep_enable_timer_wakeup(10 * 1000000);
+		/* ESP32-C6 doesn't have touchpad wakeup detection.... */
 		//esp_sleep_enable_touchpad_wakeup();
 		lv_obj_t *sleepButton = lv_btn_create(screen_splash);
 		lv_obj_add_event_cb(sleepButton, cb_button_handler, LV_EVENT_PRESSED, (void *)"sleep");
-		lv_obj_align(sleepButton, LV_ALIGN_CENTER, 0, 40);
-		lv_obj_set_style_bg_color(sleepButton, lv_color_make(0x22, 0x22, 0x22), LV_PART_MAIN);
+		lv_obj_align(sleepButton, LV_ALIGN_TOP_MID, 70, 70);
+		lv_obj_set_style_bg_color(sleepButton, lv_color_make(0x88, 0x88, 0x88), LV_PART_MAIN);
+		lv_obj_set_size(sleepButton, 70, 70);
+		lv_obj_set_style_radius(sleepButton, 70, LV_PART_MAIN);
 		lv_obj_t *sleepBLabel = lv_label_create(sleepButton);
-		lv_obj_set_style_text_font(sleepBLabel, get_montserrat_24(), LV_STATE_DEFAULT);
-		lv_label_set_text(sleepBLabel, "Sleep");
+		lv_obj_set_style_text_font(sleepBLabel, get_montserrat_semibold_28(), LV_STATE_DEFAULT);
+		lv_obj_set_style_text_align(sleepBLabel, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
+		lv_label_set_text(sleepBLabel, "S");
 
 		lv_obj_add_event_cb(screen_splash, cb_screen_event_gesture, LV_EVENT_GESTURE, NULL);
 	}
