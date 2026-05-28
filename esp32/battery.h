@@ -6,7 +6,7 @@
 #include "ui.h"
 
 /* XXX: rough calc.. */
-#define MAX_BATTERY_VOLT 4.2
+#define MAX_BATTERY_VOLT 4.01
 #define MIN_BATTERY_VOLT 2.8
 
 extern i2c_master_bus_handle_t user_i2c_port0_handle;
