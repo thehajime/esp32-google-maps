@@ -268,7 +268,8 @@ void SimpleSh8601::flushWindow(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y
 }
 
 void SimpleSh8601::invertDisplay(bool invert) {
-	uint32_t lcd_cmd = invert ? LCD_CMD_INVON : LCD_CMD_INVOFF;
+	/* ???: opposite ? */
+	uint32_t lcd_cmd = invert ? LCD_CMD_INVOFF : LCD_CMD_INVON;
 
 	lcd_cmd &= 0xff;
 	lcd_cmd <<= 8;

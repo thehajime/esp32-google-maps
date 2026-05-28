@@ -181,7 +181,7 @@ void loop() {
 	}
 
 	if (DUMMY_SPEED_DATA) {
-		Pref::speedLimit = 90;
+		Pref::speedLimit = 50;
 		DO_EVERY(500) {
 			int speed = 40 + 40*sin((millis() / 1000));
 			navigationQueue.push(String("speed=") + speed);

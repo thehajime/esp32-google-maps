@@ -20,7 +20,7 @@ namespace ThemeControl {
 				return;
 
 			isLightHardware = value;
-			value ? lcd->invertDisplay(false) : lcd->invertDisplay(true);
+			value ? lcd->invertDisplay(true) : lcd->invertDisplay(false);
 		}
 
 		bool isHardwareLight() {
