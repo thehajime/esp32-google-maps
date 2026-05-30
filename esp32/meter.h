@@ -21,11 +21,11 @@ void v_speedometer_init(lv_obj_t *screen_meter)
 		lv_obj_center(scale_meter);
 
 		lv_scale_set_mode(scale_meter, LV_SCALE_MODE_ROUND_INNER);
-		lv_scale_set_total_tick_count(scale_meter, 21);
-		lv_scale_set_major_tick_every(scale_meter, 5);
+		lv_scale_set_total_tick_count(scale_meter, 11);
+		lv_scale_set_major_tick_every(scale_meter, 10);
 		lv_obj_set_style_length(scale_meter, 5, LV_PART_ITEMS);
 		lv_obj_set_style_length(scale_meter, 10, LV_PART_INDICATOR);
-		lv_scale_set_range(scale_meter, 0, 100);
+		lv_scale_set_range(scale_meter, 20, 120);
 
 #if 0
 		/* didn't work ? XXX??? */
@@ -36,8 +36,8 @@ void v_speedometer_init(lv_obj_t *screen_meter)
 		lv_obj_add_style(scale_meter, &tick_style, LV_PART_INDICATOR);
 #endif
 
-		lv_scale_set_angle_range(scale_meter, 270);
-		lv_scale_set_rotation(scale_meter, 135);
+		lv_scale_set_angle_range(scale_meter, 185);
+		lv_scale_set_rotation(scale_meter, 175);
 	}
 
 	if (lblSpeed == NULL) {
@@ -58,7 +58,7 @@ void v_speedometer_init(lv_obj_t *screen_meter)
 	if (needle_img == NULL) {
 		needle_img = lv_image_create(scale_meter);
 		lv_image_set_src(needle_img, &vespa_gs_needle);
-		lv_obj_align(needle_img, LV_ALIGN_CENTER, 72, 3);
+		lv_obj_align(needle_img, LV_ALIGN_CENTER, 72, 30);
 		lv_image_set_pivot(needle_img, 53, 28);
 	}
 #else

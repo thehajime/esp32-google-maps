@@ -43,6 +43,7 @@ namespace Data {
 } // namespace Data
 
 LV_IMG_DECLARE(mod_circle_color);
+LV_IMG_DECLARE(lamb_tv_panel);
 namespace UI {
 	namespace details {
 		lv_obj_t* lblSpeed;
@@ -250,7 +251,7 @@ namespace UI {
 
 		lv_obj_t *imgBg = lv_img_create(screen_meter);
 		lv_obj_set_style_bg_color(imgBg, lv_color_make(0xFF, 0xFF, 0xFF), LV_PART_MAIN);
-		lv_img_set_src(imgBg, &mod_circle_color);
+		lv_img_set_src(imgBg, &lamb_tv_panel);
 
 		v_speedometer_set_value(screen_meter, 0, 0);
 		lv_obj_add_event_cb(screen_meter, cb_screen_event_gesture, LV_EVENT_GESTURE, NULL);
