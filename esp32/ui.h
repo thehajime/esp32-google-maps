@@ -164,21 +164,21 @@ namespace UI {
 
 		lv_label_set_long_mode(lblNextRoad, LV_LABEL_LONG_SCROLL_CIRCULAR);
 		lv_obj_set_style_width(lblNextRoad, SCREEN_WIDTH/2, LV_PART_MAIN);
-		lv_obj_set_style_text_font(lblNextRoad, &mochiy_pop_one_32, LV_STATE_DEFAULT);
+		lv_obj_set_style_text_font(lblNextRoad, &noto_sans_jp_semibold_32, LV_STATE_DEFAULT);
 		lv_obj_set_style_text_align(lblNextRoad, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
 		lv_obj_align_to(lblNextRoad, lblDistanceToNextRoad, LV_ALIGN_TOP_MID, 0, 60);
 
 #if 0
 		lv_label_set_long_mode(lblNextRoadDesc, LV_LABEL_LONG_SCROLL_CIRCULAR);
 		lv_obj_set_style_width(lblNextRoadDesc, SCREEN_WIDTH/2, LV_PART_MAIN);
-		lv_obj_set_style_text_font(lblNextRoadDesc, &mochiy_pop_one_32, LV_STATE_DEFAULT);
+		lv_obj_set_style_text_font(lblNextRoadDesc, &noto_sans_jp_semibold_32, LV_STATE_DEFAULT);
 		lv_obj_set_style_text_align(lblNextRoadDesc, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
 		lv_obj_align(lblNextRoadDesc, LV_ALIGN_BOTTOM_MID, 0, -90);
 #endif
 
 		lv_label_set_long_mode(lblEta, LV_LABEL_LONG_SCROLL_CIRCULAR);
 		lv_obj_set_style_width(lblEta, SCREEN_WIDTH/1.5, LV_PART_MAIN);
-		lv_obj_set_style_text_font(lblEta, &mochiy_pop_one_32, LV_STATE_DEFAULT);
+		lv_obj_set_style_text_font(lblEta, &noto_sans_jp_semibold_32, LV_STATE_DEFAULT);
 		lv_obj_set_style_text_align(lblEta, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
 		lv_obj_align(lblEta, LV_ALIGN_BOTTOM_MID, 0, -50);
 
@@ -209,7 +209,7 @@ namespace UI {
 		battLabel = lv_label_create(screen_splash);
 		lv_label_set_text(battLabel, "Batt");
 		lv_obj_set_style_text_color(battLabel, lv_color_make(0x22, 0x22, 0x22), LV_PART_MAIN);
-		lv_obj_set_style_text_font(battLabel, &mochiy_pop_one_32, LV_STATE_DEFAULT);
+		lv_obj_set_style_text_font(battLabel, &noto_sans_jp_semibold_32, LV_STATE_DEFAULT);
 		lv_obj_set_style_text_align(battLabel, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
 		lv_obj_align(battLabel, LV_ALIGN_BOTTOM_MID, 0, -50);
 
@@ -517,7 +517,7 @@ namespace Data {
 		/* if non-ascii code */
 		if (value[0] > 127)
 			lv_obj_set_style_text_font(UI::details::lblDistanceToNextRoad,
-						   &mochiy_pop_one_32, LV_STATE_DEFAULT);
+						   &noto_sans_jp_semibold_32, LV_STATE_DEFAULT);
 		else
 			lv_obj_set_style_text_font(UI::details::lblDistanceToNextRoad,
 						   &montserrat_bold_64, LV_STATE_DEFAULT);
