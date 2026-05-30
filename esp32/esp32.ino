@@ -136,7 +136,7 @@ void setup() {
 	Data::init();
 
 	lcd->setBrightness(Pref::brightness);
-	ThemeControl::dark();
+	ThemeControl::light();
 
 	/* init battery */
 	initBatery();

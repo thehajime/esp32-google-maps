@@ -11,8 +11,8 @@ namespace ThemeControl {
 		uint32_t lastFlashRequest_ms  = 0;
 		uint32_t offWithTimerStart_ms = 0;
 		int8_t toggleCount            = -1;
-		bool isLight                  = false;
-		bool isLightHardware          = false;
+		bool isLight                  = true;
+		bool isLightHardware          = true;
 		bool isWaitingForDark         = false;
 
 		void writeLight(bool value) {
@@ -20,7 +20,8 @@ namespace ThemeControl {
 				return;
 
 			isLightHardware = value;
-			value ? lcd->invertDisplay(true) : lcd->invertDisplay(false);
+			/* ???: opposite ? */
+			value ? lcd->invertDisplay(false) : lcd->invertDisplay(true);
 		}
 
 		bool isHardwareLight() {
