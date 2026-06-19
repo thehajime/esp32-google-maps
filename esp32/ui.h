@@ -194,6 +194,14 @@ namespace UI {
 			Serial.println("Sleeping...");
 			esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_OFF);
 			esp_deep_sleep_start();
+		} else if (strcmp((char *)lv_event_get_user_data(e), "demo") == 0) {
+			Serial.println("Demo...");
+			if (!isDemo)
+				isDemo = true;
+			else
+				isDemo = false;
+			lv_scr_load(screen_meter);
+			screen_current = screen_meter;
 		}
 	}
 
@@ -239,6 +247,17 @@ namespace UI {
 		lv_obj_set_style_text_align(sleepBLabel, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
 		lv_label_set_text(sleepBLabel, "S");
 
+		lv_obj_t *demoButton = lv_btn_create(screen_splash);
+		lv_obj_add_event_cb(demoButton, cb_button_handler, LV_EVENT_PRESSED, (void *)"demo");
+		lv_obj_align(demoButton, LV_ALIGN_CENTER, 0, 0);
+		lv_obj_set_style_bg_color(demoButton, lv_color_make(0x88, 0x88, 0x88), LV_PART_MAIN);
+		lv_obj_set_size(demoButton, 70, 70);
+		lv_obj_set_style_radius(demoButton, 70, LV_PART_MAIN);
+		lv_obj_t *demoBLabel = lv_label_create(demoButton);
+		lv_obj_set_style_text_font(demoBLabel, get_montserrat_semibold_28(), LV_STATE_DEFAULT);
+		lv_obj_set_style_text_align(demoBLabel, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
+		lv_label_set_text(demoBLabel, "D");
+
 		lv_obj_add_event_cb(screen_splash, cb_screen_event_gesture, LV_EVENT_GESTURE, NULL);
 	}
 
@@ -276,17 +295,8 @@ namespace UI {
 		main_screen_init();
 		splash_screen_init();
 		meter_screen_init();
-		lv_scr_load(screen_main);
-	}
-
-	void switch_splash_screen() {
-		lv_scr_load(screen_splash);
-		screen_current = screen_splash;
-	}
-
-	void switch_main_screen() {
-		lv_scr_load(screen_main);
-		screen_current = screen_main;
+		lv_scr_load(screen_meter);
+		screen_current = screen_meter;
 	}
 
 	void lv_memory_routine() {

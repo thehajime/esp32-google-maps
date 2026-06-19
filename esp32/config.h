@@ -4,7 +4,6 @@
 #define ARDUINOTRACE_ENABLE 0
 #include <ArduinoTrace.h>
 
-#define DUMMY_SPEED_DATA 0
 #define LVGL_MEMORY_PROF 0
 
 #define SCHEDULER_SOURCE millis()

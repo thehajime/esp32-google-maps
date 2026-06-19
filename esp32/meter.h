@@ -12,6 +12,7 @@ static lv_obj_t *lblSpeed = NULL;
 #define NEEDLE_IMG 1
 LV_IMAGE_DECLARE(vespa_gs_needle);
 
+bool isDemo = false;
 
 void v_speedometer_init(lv_obj_t *screen_meter)
 {
@@ -45,13 +46,15 @@ void v_speedometer_init(lv_obj_t *screen_meter)
 		lv_label_set_text(lblSpeed, "0");
 		lv_obj_set_style_text_color(lblSpeed, lv_color_make(0x00, 0x00, 0x00), LV_PART_MAIN);
 		lv_obj_set_style_text_font(lblSpeed, &montserrat_bold_64, LV_STATE_DEFAULT);
-		lv_obj_align(lblSpeed, LV_ALIGN_BOTTOM_MID, 0, -30);
+		lv_obj_align(lblSpeed, LV_ALIGN_BOTTOM_MID, 0, -50);
 
+		// disable it for lamb_tv_panel
+#if 0
 		lv_obj_t *lblSpeedUnit = lv_label_create(screen_meter);
 		lv_label_set_text(lblSpeedUnit, "km/h");
 		lv_obj_set_style_text_font(lblSpeedUnit, get_montserrat_24(), LV_STATE_DEFAULT);
 		lv_obj_align_to(lblSpeedUnit, lblSpeed, LV_ALIGN_TOP_MID, 0, -28);
-
+#endif
 	}
 
 #ifdef NEEDLE_IMG
@@ -109,13 +112,12 @@ void v_speedometer_set_value(lv_obj_t *screen_meter, int prev, int next)
 #endif
 	lv_anim_set_completed_cb(&anim_scale_line, [](lv_anim_t * a)
 		{
-//			printf("Animation Completed!\n");
 			/* w/o it it crashes???... */
-			delay(10);
+//			delay(10);
 		});
 
 	lv_anim_set_repeat_count(&anim_scale_line, 0);
-	lv_anim_set_duration(&anim_scale_line, 500);
+	lv_anim_set_duration(&anim_scale_line, 800);
 
 	lv_anim_set_values(&anim_scale_line, prev, next);
 	lv_anim_start(&anim_scale_line);

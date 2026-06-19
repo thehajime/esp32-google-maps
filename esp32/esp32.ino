@@ -180,10 +180,10 @@ void loop() {
 		readBattery();
 	}
 
-	if (DUMMY_SPEED_DATA) {
+	if (isDemo) {
 		Pref::speedLimit = 90;
-		DO_EVERY(500) {
-			int speed = 60 + 60*sin((millis() / 1000));
+		DO_EVERY(10) {
+			int speed = 60 + 60*sin((millis() / 1000 ));
 			navigationQueue.push(String("speed=") + speed);
 		}
 	}
