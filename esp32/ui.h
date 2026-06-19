@@ -288,7 +288,7 @@ namespace UI {
 					       PIN_LCD_DC,
 					       PIN_LCD_RST,
 					       PIN_BACKLIGHT,
-					       SimpleSh8601::ROTATION_0
+					       SimpleSh8601::ROTATION_180
 				);
 		}
 		lcd->init();
