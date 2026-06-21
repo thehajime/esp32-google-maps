@@ -8,6 +8,7 @@
 #include <BLESecurity.h>
 #include <BLEServer.h>
 #include <BLEUtils.h>
+#include <BLEBeacon.h>
 #include <vector>
 
 BLEServer* pServer      = NULL;
@@ -174,7 +175,28 @@ void initBle() {
 		serviceConfig.bleService->start();
 	}
 
-	server.bleServer->getAdvertising()->start();
+	BLEAdvertising *pAdvertising = server.bleServer->getAdvertising();
+
+	/* iBeacon */
+	BLEBeacon oBeacon = BLEBeacon();
+	oBeacon.setManufacturerId(0x4C00); // Apple's iBeacon manufacturer ID
+	oBeacon.setProximityUUID(BLEUUID(catDriveService.uuid));
+	oBeacon.setMajor(1);
+	oBeacon.setMinor(1);
+
+	BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
+	BLEAdvertisementData oScanResponseData = BLEAdvertisementData();
+
+	//oAdvertisementData.setFlags(0x04); // BR_EDR_NOT_SUPPORTED
+	String serviceData = "";
+	serviceData += (char)0x1A; // Length
+	serviceData += (char)0xFF; // Company ID
+	serviceData += oBeacon.getData();
+
+	oAdvertisementData.addData(serviceData);
+	pAdvertising->setAdvertisementData(oAdvertisementData);
+	pAdvertising->setScanResponseData(oScanResponseData);
+	pAdvertising->start();
 }
 
 void notifyCharacteristic(const String& uuid, uint8_t* data, size_t length) {
