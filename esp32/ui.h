@@ -57,11 +57,12 @@ namespace UI {
 		uint32_t lastUpdate = 0;
 	} // namespace details
 
-#define MAX_SCREENS 3
+#define MAX_SCREENS 4
 	lv_obj_t *screens[MAX_SCREENS];
 	lv_obj_t *screen_main;
 	lv_obj_t *screen_splash;
 	lv_obj_t *screen_meter;
+	lv_obj_t *screen_blank;
 	lv_obj_t *screen_current;
 	lv_obj_t *battLabel;
 
@@ -276,6 +277,16 @@ namespace UI {
 		lv_obj_add_event_cb(screen_meter, cb_screen_event_gesture, LV_EVENT_GESTURE, NULL);
 	}
 
+	void blank_screen_init(void) {
+		screen_blank = lv_obj_create(NULL);
+		screens[3] = screen_blank;
+		lv_obj_clear_flag(screen_blank, LV_OBJ_FLAG_SCROLLABLE);
+
+		lv_obj_set_style_bg_color(screen_blank, lv_color_make(0x00, 0x00, 0x00), LV_PART_MAIN);
+
+		lv_obj_add_event_cb(screen_blank, cb_screen_event_gesture, LV_EVENT_GESTURE, NULL);
+	}
+
 	void init() {
 		using namespace details;
 
@@ -295,6 +306,7 @@ namespace UI {
 		main_screen_init();
 		splash_screen_init();
 		meter_screen_init();
+		blank_screen_init();
 		lv_scr_load(screen_meter);
 		screen_current = screen_meter;
 	}
