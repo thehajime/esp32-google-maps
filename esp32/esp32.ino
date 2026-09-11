@@ -5,8 +5,11 @@
 #include "scheduler.h"
 #include "theme.h"
 #include "ui.h"
+#include "battery.h"
+#include "meter.h"
 
 #include <queue>
+#include <esp_task_wdt.h>
 
 std::queue<String> navigationQueue{};
 bool connectionChanged = true;
@@ -22,7 +25,7 @@ void onCharacteristicWrite(const String& uuid, uint8_t* data, size_t length) {
 		Pref::brightness = kv.getOrDefault("brightness", "100").toInt();
 		Pref::speedLimit = kv.getOrDefault("speedLimit", "60").toInt();
 
-		lcd.setBrightness(Pref::brightness);
+		lcd->setBrightness(Pref::brightness);
 		Pref::lightTheme ? ThemeControl::light() : ThemeControl::dark();
 
 		if (kv.contains("removeAllFiles")) {
@@ -132,8 +135,19 @@ void setup() {
 
 	Data::init();
 
-	lcd.setBrightness(Pref::brightness);
-	ThemeControl::dark();
+	lcd->setBrightness(Pref::brightness);
+	ThemeControl::light();
+
+	/* init battery */
+	initBatery();
+
+	/* watchdog init */
+	esp_task_wdt_config_t wdt_cfg = {
+		.timeout_ms = 15*1000,
+		.trigger_panic = true,
+	};
+	esp_task_wdt_init(&wdt_cfg);
+	esp_task_wdt_add(NULL);
 
 	Serial.println("Init done");
 }
@@ -143,6 +157,7 @@ bool isOverspeed(int speed) {
 }
 
 void loop() {
+	esp_task_wdt_reset();
 	UI::update();
 	ThemeControl::update();
 	Data::update();
@@ -161,6 +176,15 @@ void loop() {
 	DO_EVERY(10000) {
 		if (isOverspeed(Data::speed())) {
 			ThemeControl::flashScreen();
+		}
+		readBattery();
+	}
+
+	if (isDemo) {
+		Pref::speedLimit = 90;
+		DO_EVERY(10) {
+			int speed = 60 + 60*sin((millis() / 1000 ));
+			navigationQueue.push(String("speed=") + speed);
 		}
 	}
 

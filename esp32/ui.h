@@ -10,6 +10,7 @@
 #include "FS.h"
 #include "SPIFFS.h"
 #include "ble.h"
+#include "meter.h"
 #include <lvgl.h>
 
 #define FS                      SPIFFS
@@ -20,50 +21,7 @@
 #define ICON_BITMAP_BUFFER_SIZE (ICON_HEIGHT * ICON_WIDTH / 8)
 #define ICON_RENDER_BUFFER_SIZE (ICON_BITMAP_BUFFER_SIZE * LV_COLOR_DEPTH)
 
-#ifdef HORIZONTAL
-#define SCREEN_WIDTH  320
-#define SCREEN_HEIGHT 172
-#else
-#define SCREEN_WIDTH  172
-#define SCREEN_HEIGHT 320
-#endif
-
-#define DRAW_BUF_SIZE (SCREEN_WIDTH * SCREEN_HEIGHT)
-uint16_t draw_buf_0[DRAW_BUF_SIZE + 10 /* padding, just in case */];
-
-
-SimpleSt7789 lcd(&SPI,
-                 SPISettings(80000000, MSBFIRST, SPI_MODE0),
-                 SCREEN_HEIGHT,
-                 SCREEN_HEIGHT,
-                 PIN_LCD_CS,
-                 PIN_LCD_DC,
-                 PIN_LCD_RST,
-                 PIN_BACKLIGHT,
-#ifdef HORIZONTAL
-                 SimpleSt7789::ROTATION_270
-#else
-                 SimpleSt7789::ROTATION_180
-#endif
-);
-
-
-#if LV_USE_LOG != 0
-void my_print(lv_log_level_t level, const char* buf) {
-	LV_UNUSED(level);
-	Serial.println(buf);
-	Serial.flush();
-}
-#endif
-
-void my_disp_flush(lv_display_t* disp, const lv_area_t* area, uint8_t* px_map) {
-	lcd.flushWindow(area->x1, area->y1, area->x2, area->y2, (uint16_t*)px_map);
-	lv_display_flush_ready(disp);
-}
-
-static uint32_t my_tick(void) {
-	return millis();
-}
+SimpleDisplay *lcd;
 
 namespace Data {
 	namespace details {
@@ -84,6 +42,8 @@ namespace Data {
 	} // namespace details
 } // namespace Data
 
+LV_IMG_DECLARE(mod_circle_color);
+LV_IMG_DECLARE(lamb_tv_panel);
 namespace UI {
 	namespace details {
 		lv_obj_t* lblSpeed;
@@ -97,151 +57,285 @@ namespace UI {
 		uint32_t lastUpdate = 0;
 	} // namespace details
 
-	void init() {
+#define MAX_SCREENS 4
+	lv_obj_t *screens[MAX_SCREENS];
+	lv_obj_t *screen_main;
+	lv_obj_t *screen_splash;
+	lv_obj_t *screen_meter;
+	lv_obj_t *screen_blank;
+	lv_obj_t *screen_current;
+	lv_obj_t *battLabel;
+
+	void cb_screen_event_gesture(lv_event_t * e)
+	{
+		lv_obj_t *screen = (lv_obj_t *)lv_event_get_current_target(e);
+		lv_dir_t dir = lv_indev_get_gesture_dir(lv_indev_active());
+		int cur_screen, next_screen = -1;
+		lv_screen_load_anim_t anim = LV_SCR_LOAD_ANIM_NONE;
+
+		for (int i = 0; i < MAX_SCREENS; i++)
+			if (screen == screens[i])
+				cur_screen = i;
+
+		switch(dir) {
+		case LV_DIR_LEFT:
+			if (cur_screen < MAX_SCREENS - 1) {
+				next_screen = cur_screen + 1;
+				anim = LV_SCR_LOAD_ANIM_MOVE_LEFT;
+			}
+			break;
+		case LV_DIR_RIGHT:
+			if (cur_screen > 0) {
+				next_screen = cur_screen - 1;
+				anim = LV_SCR_LOAD_ANIM_MOVE_RIGHT;
+			}
+			break;
+		case LV_DIR_TOP:
+			/* do nothing */
+			break;
+		case LV_DIR_BOTTOM:
+			/* do nothing */
+			break;
+		}
+
+		if (next_screen != -1) {
+			lv_screen_load_anim(screens[next_screen], anim, 100, 100, false);
+			screen_current = screens[next_screen];
+		}
+	}
+
+	void main_screen_init(void) {
 		using namespace details;
 
-		SPI.begin(PIN_SCLK, PIN_MISO, PIN_MOSI);
-#ifdef HORIZONTAL
-		lcd.setOffset(0, 34);
-#else
-		lcd.setOffset(34, 0);
-#endif
+		screen_main = lv_obj_create(NULL);
+		screens[1] = screen_main;
+		lv_obj_clear_flag(screen_main, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+		lv_obj_set_style_bg_opa(screen_main, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-		lcd.init();
-
-		lv_init();
-		lv_tick_set_cb(my_tick);
-
-		delay(100);
-		memset(draw_buf_0, 0xAA, sizeof(draw_buf_0));
-		lcd.flushWindow(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1, draw_buf_0);
-		delay(200);
-
-#if LV_USE_LOG != 0
-		lv_log_register_print_cb(my_print);
-#endif
-
-		lv_display_t* disp = lv_display_create(SCREEN_WIDTH, SCREEN_HEIGHT);
-		lv_display_set_flush_cb(disp, my_disp_flush);
-		lv_display_set_buffers(disp, draw_buf_0, nullptr, sizeof(draw_buf_0), LV_DISPLAY_RENDER_MODE_FULL);
-
-		lv_obj_set_style_bg_color(lv_scr_act(), lv_color_make(0xFF, 0xFF, 0xFF), LV_PART_MAIN);
-
-		imgTbtIcon = lv_img_create(lv_scr_act());
+		imgTbtIcon = lv_img_create(screen_main);
 		lv_obj_set_style_bg_color(imgTbtIcon, lv_color_make(0xFF, 0xFF, 0xFF), LV_PART_MAIN);
 
-		lblSpeed = lv_label_create(lv_scr_act());
+		lblSpeed = lv_label_create(screen_main);
 		lv_label_set_text(lblSpeed, "0");
-		lv_obj_set_style_text_color(lblSpeed, lv_color_make(0xFF, 0x00, 0x00), LV_PART_MAIN);
+		lv_obj_set_style_text_color(lblSpeed, lv_color_make(0x00, 0x00, 0x00), LV_PART_MAIN);
 
-		lblSpeedUnit = lv_label_create(lv_scr_act());
+		lblSpeedUnit = lv_label_create(screen_main);
 		lv_label_set_text(lblSpeedUnit, "km/h");
 
-		lblDistanceToNextRoad = lv_label_create(lv_scr_act());
-		lv_label_set_text(lblDistanceToNextRoad, "CatDrive");
-		lv_obj_set_style_text_color(lblDistanceToNextRoad, lv_color_make(0x00, 0x00, 0xff), LV_PART_MAIN);
+		lblDistanceToNextRoad = lv_label_create(screen_main);
+		lv_label_set_text(lblDistanceToNextRoad, "--m");
+		lv_obj_set_style_text_color(lblDistanceToNextRoad, lv_color_make(0x55, 0x55, 0x55), LV_PART_MAIN);
 
-		lblNextRoad = lv_label_create(lv_scr_act());
+		lblNextRoad = lv_label_create(screen_main);
 		lv_label_set_text(lblNextRoad, "welcome!");
 
-		lblNextRoadDesc = lv_label_create(lv_scr_act());
+#if 0
+		lblNextRoadDesc = lv_label_create(screen_main);
 		lv_label_set_text(lblNextRoadDesc, "");
 		lv_obj_set_style_text_color(lblNextRoadDesc, lv_color_make(0x55, 0x55, 0x55), LV_PART_MAIN);
+#endif
 
-		lblEta = lv_label_create(lv_scr_act());
+		lblEta = lv_label_create(screen_main);
 		lv_label_set_text(lblEta, "");
 		lv_obj_set_style_text_color(lblEta, lv_color_make(0x55, 0x55, 0x55), LV_PART_MAIN);
 
-#ifdef HORIZONTAL
-#define LEFT_PART_WIDTH  (SCREEN_HEIGHT / 2 - 12)
-#define RIGHT_PART_WIDTH (SCREEN_WIDTH - LEFT_PART_WIDTH - 10)
+#define LEFT_PART_WIDTH  (SCREEN_WIDTH / 2)
+#define RIGHT_PART_WIDTH (SCREEN_WIDTH - LEFT_PART_WIDTH)
 
-		// Image top left
+		// Image top middle
 		lv_obj_set_style_width(imgTbtIcon, ICON_WIDTH, LV_PART_MAIN);
 		lv_obj_set_style_height(imgTbtIcon, ICON_HEIGHT, LV_PART_MAIN);
-		lv_obj_align(imgTbtIcon, LV_ALIGN_TOP_LEFT, 10, 10);
+		lv_img_set_zoom(imgTbtIcon, 256*2.5);
+		lv_obj_align(imgTbtIcon, LV_ALIGN_CENTER, 10, 10);
 
-		lv_label_set_long_mode(lblSpeed, LV_LABEL_LONG_SCROLL_CIRCULAR);
-		lv_obj_set_style_width(lblSpeed, LEFT_PART_WIDTH, LV_PART_MAIN);
-		lv_obj_set_style_text_font(lblSpeed, get_montserrat_number_bold_48(), LV_STATE_DEFAULT);
+		lv_obj_set_style_width(lblSpeed, SCREEN_WIDTH/2, LV_PART_MAIN);
+		lv_obj_set_style_text_font(lblSpeed, &montserrat_bold_64, LV_STATE_DEFAULT);
 		lv_obj_set_style_text_align(lblSpeed, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-		lv_obj_align(lblSpeed, LV_ALIGN_BOTTOM_LEFT, 12, -10);
+		lv_obj_align(lblSpeed, LV_ALIGN_LEFT_MID, -30, 0);
 
-		lv_obj_set_style_width(lblSpeedUnit, LEFT_PART_WIDTH, LV_PART_MAIN);
+		lv_obj_set_style_width(lblSpeedUnit, SCREEN_WIDTH/2, LV_PART_MAIN);
 		lv_obj_set_style_text_font(lblSpeedUnit, get_montserrat_24(), LV_STATE_DEFAULT);
 		lv_obj_set_style_text_align(lblSpeedUnit, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
 		lv_obj_align_to(lblSpeedUnit, lblSpeed, LV_ALIGN_TOP_LEFT, 0, -28);
 
-		lv_label_set_long_mode(lblEta, LV_LABEL_LONG_SCROLL_CIRCULAR);
-		lv_obj_set_style_width(lblEta, RIGHT_PART_WIDTH, LV_PART_MAIN);
-		lv_obj_set_style_text_font(lblEta, get_montserrat_24(), LV_STATE_DEFAULT);
-		lv_obj_set_style_text_align(lblEta, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-		lv_obj_align(lblEta, LV_ALIGN_TOP_RIGHT, 0, 10);
-
 		lv_label_set_long_mode(lblDistanceToNextRoad, LV_LABEL_LONG_SCROLL_CIRCULAR);
-		lv_obj_set_style_width(lblDistanceToNextRoad, RIGHT_PART_WIDTH, LV_PART_MAIN);
-		lv_obj_set_style_text_font(lblDistanceToNextRoad, get_montserrat_bold_32(), LV_STATE_DEFAULT);
+		lv_obj_set_style_width(lblDistanceToNextRoad, SCREEN_WIDTH/2, LV_PART_MAIN);
+		lv_obj_set_style_text_font(lblDistanceToNextRoad, &montserrat_bold_64, LV_STATE_DEFAULT);
 		lv_obj_set_style_text_align(lblDistanceToNextRoad, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-		lv_obj_align_to(lblDistanceToNextRoad, lblEta, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 0);
-
-		lv_label_set_long_mode(lblNextRoadDesc, LV_LABEL_LONG_SCROLL_CIRCULAR);
-		lv_obj_set_style_width(lblNextRoadDesc, RIGHT_PART_WIDTH, LV_PART_MAIN);
-		lv_obj_set_style_text_font(lblNextRoadDesc, get_montserrat_semibold_24(), LV_STATE_DEFAULT);
-		lv_obj_set_style_text_align(lblNextRoadDesc, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-		lv_obj_align(lblNextRoadDesc, LV_ALIGN_BOTTOM_RIGHT, 0, -10);
+		lv_obj_align(lblDistanceToNextRoad, LV_ALIGN_TOP_MID, 0, 30);
 
 		lv_label_set_long_mode(lblNextRoad, LV_LABEL_LONG_SCROLL_CIRCULAR);
-		lv_obj_set_style_width(lblNextRoad, RIGHT_PART_WIDTH, LV_PART_MAIN);
-		lv_obj_set_style_text_font(lblNextRoad, get_montserrat_semibold_28(), LV_STATE_DEFAULT);
+		lv_obj_set_style_width(lblNextRoad, SCREEN_WIDTH/2, LV_PART_MAIN);
+		lv_obj_set_style_text_font(lblNextRoad, &noto_sans_jp_semibold_32, LV_STATE_DEFAULT);
 		lv_obj_set_style_text_align(lblNextRoad, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-		lv_obj_align_to(lblNextRoad, lblNextRoadDesc, LV_ALIGN_TOP_LEFT, 0, -40);
+		lv_obj_align_to(lblNextRoad, lblDistanceToNextRoad, LV_ALIGN_TOP_MID, 0, 60);
 
-#else
-		lv_obj_set_style_width(imgTbtIcon, ICON_WIDTH, LV_PART_MAIN);
-		lv_obj_set_style_height(imgTbtIcon, ICON_HEIGHT, LV_PART_MAIN);
-		lv_obj_align(imgTbtIcon, LV_ALIGN_TOP_LEFT, 10, 10);
-
-		lv_label_set_long_mode(lblSpeed, LV_LABEL_LONG_SCROLL_CIRCULAR);
-		lv_obj_set_style_width(lblSpeed, SCREEN_WIDTH / 2 - 12, LV_PART_MAIN);
-		lv_obj_set_style_text_font(lblSpeed, get_montserrat_number_bold_48(), LV_STATE_DEFAULT);
-		lv_obj_set_style_text_align(lblSpeed, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-		lv_obj_align(lblSpeed, LV_ALIGN_TOP_RIGHT, -12, 15);
-
-		lv_obj_set_style_width(lblSpeedUnit, SCREEN_WIDTH / 2 - 12, LV_PART_MAIN);
-		lv_obj_set_style_text_font(lblSpeedUnit, get_montserrat_24(), LV_STATE_DEFAULT);
-		lv_obj_set_style_text_align(lblSpeedUnit, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-		lv_obj_align(lblSpeedUnit, LV_ALIGN_TOP_RIGHT, -12, 50);
-
-		lv_label_set_long_mode(lblDistanceToNextRoad, LV_LABEL_LONG_SCROLL_CIRCULAR);
-		lv_obj_set_style_width(lblDistanceToNextRoad, SCREEN_WIDTH, LV_PART_MAIN);
-		lv_obj_set_style_text_font(lblDistanceToNextRoad, get_montserrat_semibold_28(), LV_STATE_DEFAULT);
-		lv_obj_set_style_text_align(lblDistanceToNextRoad, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-		lv_obj_align(lblDistanceToNextRoad, LV_ALIGN_TOP_MID, 0, 85);
-
-		lv_label_set_long_mode(lblNextRoad, LV_LABEL_LONG_WRAP);
-		lv_obj_set_style_width(lblNextRoad, SCREEN_WIDTH, LV_PART_MAIN);
-		lv_obj_set_style_text_font(lblNextRoad, get_montserrat_semibold_28(), LV_STATE_DEFAULT);
-		lv_obj_set_style_text_align(lblNextRoad, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-		lv_obj_align_to(lblNextRoad, lblDistanceToNextRoad, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 0);
-
-		lv_label_set_long_mode(lblNextRoadDesc, LV_LABEL_LONG_WRAP);
-		lv_obj_set_style_width(lblNextRoadDesc, SCREEN_WIDTH, LV_PART_MAIN);
-		lv_obj_set_style_text_font(lblNextRoadDesc, get_montserrat_semibold_24(), LV_STATE_DEFAULT);
+#if 0
+		lv_label_set_long_mode(lblNextRoadDesc, LV_LABEL_LONG_SCROLL_CIRCULAR);
+		lv_obj_set_style_width(lblNextRoadDesc, SCREEN_WIDTH/2, LV_PART_MAIN);
+		lv_obj_set_style_text_font(lblNextRoadDesc, &noto_sans_jp_semibold_32, LV_STATE_DEFAULT);
 		lv_obj_set_style_text_align(lblNextRoadDesc, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-		// FIXME: align not working for wrapped text when height changes
-		lv_obj_align_to(lblNextRoadDesc, lblNextRoad, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 0);
+		lv_obj_align(lblNextRoadDesc, LV_ALIGN_BOTTOM_MID, 0, -90);
+#endif
 
 		lv_label_set_long_mode(lblEta, LV_LABEL_LONG_SCROLL_CIRCULAR);
-		lv_obj_set_style_text_font(lblEta, get_montserrat_24(), LV_STATE_DEFAULT);
-		lv_obj_set_style_width(lblEta, SCREEN_WIDTH, LV_PART_MAIN);
-		lv_obj_align(lblEta, LV_ALIGN_BOTTOM_MID, 0, -5);
-#endif
+		lv_obj_set_style_width(lblEta, SCREEN_WIDTH/1.5, LV_PART_MAIN);
+		lv_obj_set_style_text_font(lblEta, &noto_sans_jp_semibold_32, LV_STATE_DEFAULT);
+		lv_obj_set_style_text_align(lblEta, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
+		lv_obj_align(lblEta, LV_ALIGN_BOTTOM_MID, 0, -50);
+
+		lv_obj_add_event_cb(screen_main, cb_screen_event_gesture, LV_EVENT_GESTURE, NULL);
+	}
+
+	void cb_button_handler(lv_event_t *e) {
+		if (strcmp((char *)lv_event_get_user_data(e), "reset") == 0) {
+			Serial.println("Restarting...");
+			ESP.restart();
+		} else if (strcmp((char *)lv_event_get_user_data(e), "sleep") == 0) {
+			Serial.println("Sleeping...");
+			esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_OFF);
+			esp_deep_sleep_start();
+		} else if (strcmp((char *)lv_event_get_user_data(e), "demo") == 0) {
+			Serial.println("Demo...");
+			if (!isDemo)
+				isDemo = true;
+			else
+				isDemo = false;
+			lv_scr_load(screen_meter);
+			screen_current = screen_meter;
+		}
+	}
+
+	void splash_screen_init(void) {
+		screen_splash = lv_obj_create(NULL);
+		screens[0] = screen_splash;
+		lv_obj_clear_flag(screen_splash, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+		lv_obj_set_style_bg_opa(screen_splash, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+		lv_obj_t *imgBg = lv_img_create(screen_splash);
+		lv_obj_set_style_bg_color(imgBg, lv_color_make(0xFF, 0xFF, 0xFF), LV_PART_MAIN);
+		lv_img_set_src(imgBg, &mod_circle_color);
+
+		battLabel = lv_label_create(screen_splash);
+		lv_label_set_text(battLabel, "Batt");
+		lv_obj_set_style_text_color(battLabel, lv_color_make(0x22, 0x22, 0x22), LV_PART_MAIN);
+		lv_obj_set_style_text_font(battLabel, &noto_sans_jp_semibold_32, LV_STATE_DEFAULT);
+		lv_obj_set_style_text_align(battLabel, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
+		lv_obj_align(battLabel, LV_ALIGN_BOTTOM_MID, 0, -50);
+
+		lv_obj_t *resetButton = lv_btn_create(screen_splash);
+		lv_obj_add_event_cb(resetButton, cb_button_handler, LV_EVENT_PRESSED, (void *)"reset");
+		lv_obj_align(resetButton, LV_ALIGN_TOP_MID, -70, 70);
+		lv_obj_set_style_bg_color(resetButton, lv_color_make(0x88, 0x88, 0x88), LV_PART_MAIN);
+		lv_obj_set_size(resetButton, 70, 70);
+		lv_obj_set_style_radius(resetButton, 70, LV_PART_MAIN);
+		lv_obj_t *resetBLabel = lv_label_create(resetButton);
+		lv_obj_set_style_text_font(resetBLabel, get_montserrat_semibold_28(), LV_STATE_DEFAULT);
+		lv_obj_set_style_text_align(resetBLabel, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
+		lv_label_set_text(resetBLabel, "R");
+
+		esp_sleep_enable_timer_wakeup(10 * 1000000);
+		/* ESP32-C6 doesn't have touchpad wakeup detection.... */
+		//esp_sleep_enable_touchpad_wakeup();
+		lv_obj_t *sleepButton = lv_btn_create(screen_splash);
+		lv_obj_add_event_cb(sleepButton, cb_button_handler, LV_EVENT_PRESSED, (void *)"sleep");
+		lv_obj_align(sleepButton, LV_ALIGN_TOP_MID, 70, 70);
+		lv_obj_set_style_bg_color(sleepButton, lv_color_make(0x88, 0x88, 0x88), LV_PART_MAIN);
+		lv_obj_set_size(sleepButton, 70, 70);
+		lv_obj_set_style_radius(sleepButton, 70, LV_PART_MAIN);
+		lv_obj_t *sleepBLabel = lv_label_create(sleepButton);
+		lv_obj_set_style_text_font(sleepBLabel, get_montserrat_semibold_28(), LV_STATE_DEFAULT);
+		lv_obj_set_style_text_align(sleepBLabel, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
+		lv_label_set_text(sleepBLabel, "S");
+
+		lv_obj_t *demoButton = lv_btn_create(screen_splash);
+		lv_obj_add_event_cb(demoButton, cb_button_handler, LV_EVENT_PRESSED, (void *)"demo");
+		lv_obj_align(demoButton, LV_ALIGN_CENTER, 0, 0);
+		lv_obj_set_style_bg_color(demoButton, lv_color_make(0x88, 0x88, 0x88), LV_PART_MAIN);
+		lv_obj_set_size(demoButton, 70, 70);
+		lv_obj_set_style_radius(demoButton, 70, LV_PART_MAIN);
+		lv_obj_t *demoBLabel = lv_label_create(demoButton);
+		lv_obj_set_style_text_font(demoBLabel, get_montserrat_semibold_28(), LV_STATE_DEFAULT);
+		lv_obj_set_style_text_align(demoBLabel, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
+		lv_label_set_text(demoBLabel, "D");
+
+		lv_obj_add_event_cb(screen_splash, cb_screen_event_gesture, LV_EVENT_GESTURE, NULL);
+	}
+
+
+	void meter_screen_init(void) {
+		screen_meter = lv_obj_create(NULL);
+		screens[2] = screen_meter;
+		lv_obj_clear_flag(screen_meter, LV_OBJ_FLAG_SCROLLABLE);
+		lv_obj_set_style_bg_opa(screen_meter, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+		lv_obj_t *imgBg = lv_img_create(screen_meter);
+		lv_obj_set_style_bg_color(imgBg, lv_color_make(0xFF, 0xFF, 0xFF), LV_PART_MAIN);
+		lv_img_set_src(imgBg, &lamb_tv_panel);
+
+		v_speedometer_set_value(screen_meter, 0, 0);
+		lv_obj_add_event_cb(screen_meter, cb_screen_event_gesture, LV_EVENT_GESTURE, NULL);
+	}
+
+	void blank_screen_init(void) {
+		screen_blank = lv_obj_create(NULL);
+		screens[3] = screen_blank;
+		lv_obj_clear_flag(screen_blank, LV_OBJ_FLAG_SCROLLABLE);
+
+		lv_obj_set_style_bg_color(screen_blank, lv_color_make(0x00, 0x00, 0x00), LV_PART_MAIN);
+
+		lv_obj_add_event_cb(screen_blank, cb_screen_event_gesture, LV_EVENT_GESTURE, NULL);
+	}
+
+	void init() {
+		using namespace details;
+
+		if (SimpleDisplay::readLcdId() == LCD_ID_SH8601) {
+			lcd = new SimpleSh8601(&SPI,
+					       SPISettings(80000000, MSBFIRST, SPI_MODE0),
+					       SCREEN_HEIGHT,
+					       SCREEN_HEIGHT,
+					       PIN_LCD_CS,
+					       PIN_LCD_DC,
+					       PIN_LCD_RST,
+					       PIN_BACKLIGHT,
+					       SimpleSh8601::ROTATION_180
+				);
+		}
+		lcd->init();
+		main_screen_init();
+		splash_screen_init();
+		meter_screen_init();
+		blank_screen_init();
+		lv_scr_load(screen_meter);
+		screen_current = screen_meter;
+	}
+
+	void lv_memory_routine() {
+		lv_mem_monitor_t mon;
+		lv_mem_monitor(&mon);
+
+		Serial.printf("Used: %d/%d (%.1f%%), Frag: %.1f%%\n",
+			      mon.total_size - mon.free_size,
+			      mon.total_size,
+			      (mon.total_size - mon.free_size) * 100.0 / mon.total_size,
+			      mon.frag_pct
+			);
+		if (mon.frag_pct> 30.0) {
+			Serial.println("defrag");
+//                     lv_mem_defrag();
+		}
 	}
 
 	void update() {
 		using namespace details;
 		if (millis() - details::lastUpdate < 5)
 			return;
+		if (LVGL_MEMORY_PROF) {
+			DO_EVERY(5000) {
+				lv_memory_routine();
+			}
+		}
 
 		details::lastUpdate = millis();
 		lv_timer_handler();
@@ -321,6 +415,7 @@ namespace Data {
 		}
 
 		listFiles();
+		setSpeed(0);
 	}
 
 	bool hasNavigationData() {
@@ -341,6 +436,7 @@ namespace Data {
 		setTotalDistance(String());
 		setIconHash(String());
 		details::receivedIconHash = String();
+		setSpeed(0);
 	}
 
 	void clearSpeedData() {
@@ -355,8 +451,8 @@ namespace Data {
 		if (value == details::speed)
 			return;
 
+		v_speedometer_set_value(UI::screen_meter, details::speed, value);
 		details::speed = value;
-
 		if (value == -1) {
 			lv_label_set_text(UI::details::lblSpeed, "");
 		} else {
@@ -390,7 +486,9 @@ namespace Data {
 
 		details::nextRoadDesc = value;
 
+#if 0
 		lv_label_set_text(UI::details::lblNextRoadDesc, value.c_str());
+#endif
 	}
 
 	String eta() {
@@ -403,7 +501,7 @@ namespace Data {
 
 		details::eta = value;
 
-		lv_label_set_text(UI::details::lblEta, fullEta().c_str());
+		lv_label_set_text(UI::details::lblEta, (ete() + "-" + eta()).c_str());
 	}
 
 	String ete() {
@@ -415,7 +513,7 @@ namespace Data {
 			return;
 		details::ete = value;
 
-		lv_label_set_text(UI::details::lblEta, fullEta().c_str());
+		lv_label_set_text(UI::details::lblEta, (ete() + "-" + eta()).c_str());
 	}
 
 	String totalDistance() {
@@ -427,7 +525,7 @@ namespace Data {
 			return;
 		details::totalDistance = value;
 
-		lv_label_set_text(UI::details::lblEta, fullEta().c_str());
+		lv_label_set_text(UI::details::lblEta, (ete() + "-" + eta()).c_str());
 	}
 
 	String distanceToNextTurn() {
@@ -439,11 +537,23 @@ namespace Data {
 			return;
 		details::distanceToNextTurn = value;
 
+		/* if non-ascii code */
+		if (value[0] > 127)
+			lv_obj_set_style_text_font(UI::details::lblDistanceToNextRoad,
+						   &noto_sans_jp_semibold_32, LV_STATE_DEFAULT);
+		else
+			lv_obj_set_style_text_font(UI::details::lblDistanceToNextRoad,
+						   &montserrat_bold_64, LV_STATE_DEFAULT);
+
 		lv_label_set_text(UI::details::lblDistanceToNextRoad, value.c_str());
 	}
 
 	String fullEta() {
 		return ete() + " - " + totalDistance() + " - " + eta();
+	}
+
+	void setBatteryCap(float volt, int percentage) {
+		lv_label_set_text_fmt(UI::battLabel, "%.3fV/%d%%", volt, percentage);
 	}
 
 	String displayIconHash() {
@@ -491,7 +601,7 @@ namespace Data {
 			Serial.println("Error: Icon buffer overflow");
 		} else {
 			Serial.println("Drawing icon");
-			convert1BitBitmapToRgb565(details::iconRenderBuffer, value, 64, 64, lv_color_to_u16(lv_color_make(0x00, 0x00, 0xFF)),
+			convert1BitBitmapToRgb565(details::iconRenderBuffer, value, 64, 64, lv_color_to_u16(lv_color_make(0x55, 0x55, 0x55)),
 			                          lv_color_to_u16(lv_color_make(0xFF, 0xFF, 0xFF)));
 			details::iconDirty = true;
 		}

@@ -1,21 +1,88 @@
 #include "lcd.h"
+#include "config.h"
 #include "registers.h"
+#include <lvgl.h>
 #include <SPI.h>
 
+
+class SimpleSt7789 : public SimpleDisplay
+{
+public:
+	SimpleSt7789(SPIClass* spi,
+		     const SPISettings& spiSettings,
+		     uint16_t width,
+		     uint16_t height,
+		     uint8_t cs,
+		     uint8_t dc,
+		     uint8_t rst,
+		     uint8_t backlight,
+		     Rotation rotation);
+	void init();
+	void reset();
+	void setRotation(Rotation rotation);
+	void setOffset(uint16_t xOffset, uint16_t yOffset);
+	void setBrightness(uint8_t percent);
+	void flushWindow(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t* color);
+	void invertDisplay(bool invert);
+protected:
+	void setAddrWindow(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2);
+	void sendCommand(uint8_t command, const uint8_t* data = nullptr, size_t size = 0);
+	void sendData(const uint8_t* data, size_t size);
+};
+
 SimpleSt7789::SimpleSt7789(SPIClass* spi,
-                           const SPISettings& spiSettings,
-                           uint16_t width,
-                           uint16_t height,
-                           uint8_t cs,
-                           uint8_t dc,
-                           uint8_t rst,
-                           uint8_t backlight,
-                           Rotation rotation)
-: _spi(spi), _spiSettings(spiSettings), _width(width), _height(height), _pinCs(cs), _pinDc(dc), _pinRst(rst),
-  _pinBacklight(backlight), _rotation(rotation), _xOffset(0), _yOffset(0) {
+			   const SPISettings& spiSettings,
+			   uint16_t width,
+			   uint16_t height,
+			   uint8_t cs,
+			   uint8_t dc,
+			   uint8_t rst,
+			   uint8_t backlight,
+			   Rotation rotation)
+: SimpleDisplay(spi, spiSettings, width, height, cs, dc, rst,
+		backlight, rotation) {
 }
 
+#ifdef HORIZONTAL
+#define SCREEN_WIDTH  320
+#define SCREEN_HEIGHT 172
+#else
+#define SCREEN_WIDTH  172
+#define SCREEN_HEIGHT 320
+#endif
+
+#define LCD_BIT_PER_PIXEL 16
+#define BYTES_PER_PIXEL (LV_COLOR_FORMAT_GET_SIZE(LV_COLOR_FORMAT_RGB565))
+#define DRAW_BUF_SIZE (SCREEN_WIDTH * SCREEN_HEIGHT)
+uint16_t draw_buf_0[DRAW_BUF_SIZE];
+
+static uint32_t my_tick(void) {
+	return millis();
+}
+
+void my_disp_flush(lv_display_t* disp, const lv_area_t* area, uint8_t* px_map) {
+#if 0
+	flushWindow(area->x1, area->y1, area->x2, area->y2, (uint16_t*)px_map);
+#endif
+	lv_display_flush_ready(disp);
+}
+
+#if LV_USE_LOG != 0
+void my_print(lv_log_level_t level, const char* buf) {
+	LV_UNUSED(level);
+	Serial.println(buf);
+	Serial.flush();
+}
+#endif
+
 void SimpleSt7789::init() {
+	SPI.begin(PIN_SCLK, PIN_MISO, PIN_MOSI);
+#ifdef HORIZONTAL
+	setOffset(0, 34);
+#else
+	setOffset(34, 0);
+#endif
+
 	pinMode(_pinCs, OUTPUT);
 	pinMode(_pinDc, OUTPUT);
 
@@ -54,6 +121,24 @@ void SimpleSt7789::init() {
 	sendCommand(REG_DISPON);
 
 	setBrightness(100);
+
+	/* ui init */
+	lv_init();
+	lv_tick_set_cb(my_tick);
+
+	delay(100);
+	memset(draw_buf_0, 0xAA, sizeof(draw_buf_0));
+	flushWindow(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1, draw_buf_0);
+
+#if LV_USE_LOG != 0
+	lv_log_register_print_cb(my_print);
+#endif
+
+	lv_display_t* disp = lv_display_create(SCREEN_WIDTH, SCREEN_HEIGHT);
+	lv_display_set_flush_cb(disp, my_disp_flush);
+	lv_display_set_buffers(disp, draw_buf_0, nullptr, sizeof(draw_buf_0), LV_DISPLAY_RENDER_MODE_FULL);
+	lv_obj_set_style_bg_color(lv_scr_act(), lv_color_make(0xFF, 0xFF, 0xFF), LV_PART_MAIN);
+
 }
 
 void SimpleSt7789::reset() {
